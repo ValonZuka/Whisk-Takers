@@ -1,3 +1,8 @@
+<script setup lang="ts">
+ 
+</script>
+
 <template>
-    <h1 >TEST TEST 12412</h1>
+<h1>Test Test 1212</h1>
+  <router-view />
 </template>
