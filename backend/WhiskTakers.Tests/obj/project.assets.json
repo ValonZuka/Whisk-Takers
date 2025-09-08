@@ -1708,6 +1708,40 @@
         "build": {
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
+      },
+      "WhiskTakers.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "WhiskTakers.Core": "1.0.0",
+          "WhiskTakers.Infrastructure": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/WhiskTakers.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WhiskTakers.Application.dll": {}
+        }
+      },
+      "WhiskTakers.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/WhiskTakers.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WhiskTakers.Core.dll": {}
+        }
+      },
+      "WhiskTakers.Infrastructure/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/WhiskTakers.Infrastructure.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WhiskTakers.Infrastructure.dll": {}
+        }
       }
     }
   },
@@ -5497,11 +5531,27 @@
         "xunit.runner.visualstudio.2.5.3.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "WhiskTakers.Application/1.0.0": {
+      "type": "project",
+      "path": "../WhiskTakers.Application/WhiskTakers.Application.csproj",
+      "msbuildProject": "../WhiskTakers.Application/WhiskTakers.Application.csproj"
+    },
+    "WhiskTakers.Core/1.0.0": {
+      "type": "project",
+      "path": "../WhiskTakers.Core/WhiskTakers.Core.csproj",
+      "msbuildProject": "../WhiskTakers.Core/WhiskTakers.Core.csproj"
+    },
+    "WhiskTakers.Infrastructure/1.0.0": {
+      "type": "project",
+      "path": "../WhiskTakers.Infrastructure/WhiskTakers.Infrastructure.csproj",
+      "msbuildProject": "../WhiskTakers.Infrastructure/WhiskTakers.Infrastructure.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
       "Microsoft.NET.Test.Sdk >= 17.8.0",
+      "WhiskTakers.Application >= 1.0.0",
       "coverlet.collector >= 6.0.0",
       "xunit >= 2.5.3",
       "xunit.runner.visualstudio >= 2.5.3"
@@ -5531,7 +5581,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj": {
+              "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
