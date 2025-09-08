@@ -1,13 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // backend API base URL
+  baseURL: "http://localhost:5000/api", 
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-// optional: attach token automatically
+// e ndreqmi tokenin mavone 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
   if (token) {

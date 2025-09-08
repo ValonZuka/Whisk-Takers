@@ -16,9 +16,9 @@ const login = async () => {
     // ruaj token në localStorage
     localStorage.setItem("access_token", res.data.token);
 
-    alert("Login successful ✅");
+    alert("Login success");
   } catch (err) {
-    error.value = err.response?.data?.message || "Login failed ❌";
+    error.value = err.response?.data?.message || "Login failed";
   }
 };
 </script>
