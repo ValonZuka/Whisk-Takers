@@ -1,12 +1,17 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
-import api from "../api/axios.ts"; // kjo lidhet me axios.js
+import api from "../api/axios";
 
-const products = ref([]);
+const products = ref<any[]>([]);
 
 onMounted(async () => {
-  const res = await api.get("/products");
-  products.value = res.data;
+  try {
+    const res = await api.get("/products");
+    console.log("API response:", res.data); 
+    products.value = res.data;
+  } catch (err) {
+    console.error("API error:", err); 
+  }
 });
 </script>
 
