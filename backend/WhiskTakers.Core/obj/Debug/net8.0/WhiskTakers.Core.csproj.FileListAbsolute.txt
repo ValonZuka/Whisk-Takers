@@ -1,0 +1,12 @@
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\bin\Debug\net8.0\WhiskTakers.Core.deps.json
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\bin\Debug\net8.0\WhiskTakers.Core.dll
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\bin\Debug\net8.0\WhiskTakers.Core.pdb
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.AssemblyInfoInputs.cache
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.AssemblyInfo.cs
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.csproj.CoreCompileInputs.cache
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.sourcelink.json
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.dll
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\refint\WhiskTakers.Core.dll
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\WhiskTakers.Core.pdb
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.Core\obj\Debug\net8.0\ref\WhiskTakers.Core.dll

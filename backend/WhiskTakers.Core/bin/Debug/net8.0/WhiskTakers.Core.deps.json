@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "WhiskTakers.Core/1.0.0": {
+        "runtime": {
+          "WhiskTakers.Core.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "WhiskTakers.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -28,6 +28,9 @@
             "projectReferences": {
               "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj": {
                 "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj"
+              },
+              "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Infrastructure\\WhiskTakers.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Infrastructure\\WhiskTakers.Infrastructure.csproj"
               }
             }
           }
@@ -57,13 +60,17 @@
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.*, )"
+              "version": "[9.0.9, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.*, )"
+              "version": "[9.0.9, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[9.0.0, )"
             },
             "Serilog.AspNetCore": {
               "target": "Package",
@@ -241,7 +248,11 @@
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Core\\WhiskTakers.Core.csproj": {
+                "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Core\\WhiskTakers.Core.csproj"
+              }
+            }
           }
         },
         "warningProperties": {
@@ -258,6 +269,22 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

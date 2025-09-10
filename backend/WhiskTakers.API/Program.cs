@@ -1,4 +1,8 @@
+using WhiskTakers.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddCors(options =>
 {
@@ -10,7 +14,10 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+builder.Services.AddDbContext<WhiskTakersDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "SYceTjlrS8KunGXkjYrcQqRWPuDz5wqWGYRe/9euZr0=",
+  "Source": "WhiskTakers.API",
+  "BasePath": "_content/WhiskTakers.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
