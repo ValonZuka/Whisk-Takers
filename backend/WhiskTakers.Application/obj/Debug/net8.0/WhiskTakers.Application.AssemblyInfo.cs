@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WhiskTakers.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8d4c7d9eedbc1fe3f3e43ea125ec54ce52f91d29")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+129a42c81e1a5d6d98adb2c0a817657c4888e6b2")]
 [assembly: System.Reflection.AssemblyProductAttribute("WhiskTakers.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WhiskTakers.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
