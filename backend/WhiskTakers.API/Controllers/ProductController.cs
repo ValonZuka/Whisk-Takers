@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WhiskTakers.Infrastructure;
 using WhiskTakers.Core.Entities;
+using WhiskTakers.Application.DTOs.Products;
 using Microsoft.EntityFrameworkCore;
 
 namespace WhiskTakers.API.Controllers
@@ -19,34 +20,72 @@ namespace WhiskTakers.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _context.Products.ToListAsync();
-            return Ok(products);
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .ToListAsync();
+
+            var response = products.Select(p => new ProductResponseDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                CategoryName = p.Category?.Name ?? ""
+            });
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null) return NotFound();
-            return Ok(product);
+
+            var response = new ProductResponseDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                CategoryName = product.Category?.Name ?? ""
+            };
+
+            return Ok(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProduct(Product product)
+        public async Task<IActionResult> CreateProduct(ProductCreateDto dto)
         {
+            var product = new Product
+            {
+                Name = dto.Name,
+                Price = dto.Price
+            };
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+
+            var response = new ProductResponseDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                CategoryName = _context.Categories.FirstOrDefault(c => c.Id == dto.CategoryId)?.Name ?? ""
+            };
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, response);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, Product updatedProduct)
+        public async Task<IActionResult> UpdateProduct(int id, ProductUpdateDto dto)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null) return NotFound();
 
-            product.Name = updatedProduct.Name;
-            product.Price = updatedProduct.Price;
+            product.Name = dto.Name;
+            product.Price = dto.Price;
 
             await _context.SaveChangesAsync();
             return NoContent();
