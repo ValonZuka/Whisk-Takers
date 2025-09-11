@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WhiskTakers.Infrastructure;
 using WhiskTakers.Core.Entities;
+using WhiskTakers.Application.DTOs.Categories;
 using Microsoft.EntityFrameworkCore;
 
 namespace WhiskTakers.API.Controllers
@@ -20,9 +21,16 @@ namespace WhiskTakers.API.Controllers
         public async Task<IActionResult> GetCategories()
         {
             var categories = await _context.Categories
-                .Include(c => c.Products) // 👈 nëse do t’i marrësh edhe produktet brenda kategorisë
+                .Include(c => c.Products)
                 .ToListAsync();
-            return Ok(categories);
+
+            var response = categories.Select(c => new CategoryResponseDto
+            {
+                Id = c.Id,
+                Name = c.Name
+            });
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
@@ -33,24 +41,43 @@ namespace WhiskTakers.API.Controllers
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null) return NotFound();
-            return Ok(category);
+
+            var response = new CategoryResponseDto
+            {
+                Id = category.Id,
+                Name = category.Name
+            };
+
+            return Ok(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCategory(Category category)
+        public async Task<IActionResult> CreateCategory(CategoryCreateDto dto)
         {
+            var category = new Category
+            {
+                Name = dto.Name
+            };
+
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
+
+            var response = new CategoryResponseDto
+            {
+                Id = category.Id,
+                Name = category.Name
+            };
+
+            return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, response);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, Category updatedCategory)
+        public async Task<IActionResult> UpdateCategory(int id, CategoryUpdateDto dto)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null) return NotFound();
 
-            category.Name = updatedCategory.Name;
+            category.Name = dto.Name;
 
             await _context.SaveChangesAsync();
             return NoContent();
