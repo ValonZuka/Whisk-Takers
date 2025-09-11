@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WhiskTakers.Infrastructure;
 using WhiskTakers.Core.Entities;
+using WhiskTakers.Application.DTOs.Orders;
 using Microsoft.EntityFrameworkCore;
 
 namespace WhiskTakers.API.Controllers
@@ -24,7 +25,22 @@ namespace WhiskTakers.API.Controllers
                 .ThenInclude(i => i.Product)
                 .ToListAsync();
 
-            return Ok(orders);
+            var response = orders.Select(o => new OrderResponseDto
+            {
+                Id = o.Id,
+                TableNumber = o.TableNumber,
+                Status = o.Status,
+                CreatedAt = o.CreatedAt,
+                Items = o.Items.Select(i => new OrderItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.Product?.Name ?? "",
+                    ProductPrice = i.Product?.Price ?? 0,
+                    Quantity = i.Quantity
+                }).ToList()
+            });
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
@@ -36,19 +52,64 @@ namespace WhiskTakers.API.Controllers
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null) return NotFound();
-            return Ok(order);
+
+            var response = new OrderResponseDto
+            {
+                Id = order.Id,
+                TableNumber = order.TableNumber,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                Items = order.Items.Select(i => new OrderItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.Product?.Name ?? "",
+                    ProductPrice = i.Product?.Price ?? 0,
+                    Quantity = i.Quantity
+                }).ToList()
+            };
+
+            return Ok(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrder(Order order)
+        public async Task<IActionResult> CreateOrder(OrderCreateDto dto)
         {
+            if (dto.Items == null || !dto.Items.Any())
+                return BadRequest("Order must have at least one item.");
+
+            var order = new Order
+            {
+                TableNumber = dto.TableNumber,
+                Items = dto.Items.Select(i => new OrderItem
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity
+                }).ToList()
+            };
+
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+
+            var response = new OrderResponseDto
+            {
+                Id = order.Id,
+                TableNumber = order.TableNumber,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                Items = order.Items.Select(i => new OrderItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = _context.Products.FirstOrDefault(p => p.Id == i.ProductId)?.Name ?? "",
+                    ProductPrice = _context.Products.FirstOrDefault(p => p.Id == i.ProductId)?.Price ?? 0,
+                    Quantity = i.Quantity
+                }).ToList()
+            };
+
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, response);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrder(int id, Order updatedOrder)
+        public async Task<IActionResult> UpdateOrder(int id, OrderCreateDto dto)
         {
             var order = await _context.Orders
                 .Include(o => o.Items)
@@ -56,11 +117,16 @@ namespace WhiskTakers.API.Controllers
 
             if (order == null) return NotFound();
 
-            order.Status = updatedOrder.Status;
-            order.TableNumber = updatedOrder.TableNumber;
-            order.Items = updatedOrder.Items;
+            order.TableNumber = dto.TableNumber;
+
+            order.Items = dto.Items.Select(i => new OrderItem
+            {
+                ProductId = i.ProductId,
+                Quantity = i.Quantity
+            }).ToList();
 
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
