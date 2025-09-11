@@ -131,14 +131,21 @@ namespace WhiskTakers.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrder(int id)
-        {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
+            public async Task<IActionResult> DeleteOrder(int id)
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Items)
+                    .FirstOrDefaultAsync(o => o.Id == id);
 
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
+                if (order == null) return NotFound();
+
+                // Fshi items manualisht
+                _context.OrderItems.RemoveRange(order.Items);
+
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+
     }
 }

@@ -61,7 +61,8 @@ namespace WhiskTakers.API.Controllers
             var product = new Product
             {
                 Name = dto.Name,
-                Price = dto.Price
+                Price = dto.Price,
+                CategoryId = dto.CategoryId
             };
 
             _context.Products.Add(product);
@@ -86,10 +87,12 @@ namespace WhiskTakers.API.Controllers
 
             product.Name = dto.Name;
             product.Price = dto.Price;
+            product.CategoryId = dto.CategoryId; // përditëso Category
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
+            
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
