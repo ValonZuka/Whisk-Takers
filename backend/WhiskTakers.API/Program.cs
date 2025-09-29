@@ -1,5 +1,8 @@
 using WhiskTakers.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -9,7 +12,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins("http://localhost:5173", "http://localhost:6080")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -17,6 +20,24 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<WhiskTakersDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddControllers();
+
+// Add JWT Authentication
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "WhiskTakers",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "WhiskTakers",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!"))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -32,7 +53,9 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection(); // niher pe heki se pe qet pldh nconsolle prej http -> https
 
 app.UseCors("AllowFrontend");
+app.UseDeveloperExceptionPage();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

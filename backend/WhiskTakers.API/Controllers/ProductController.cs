@@ -104,5 +104,43 @@ namespace WhiskTakers.API.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpPost("seed")]
+        public async Task<IActionResult> SeedProducts()
+        {
+            // Check if products already exist
+            if (await _context.Products.AnyAsync())
+            {
+                return Ok(new { message = "Products already exist" });
+            }
+
+            // Create some sample categories first
+            var categories = new[]
+            {
+                new Category { Name = "Starters" },
+                new Category { Name = "Mains" },
+                new Category { Name = "Desserts" }
+            };
+
+            _context.Categories.AddRange(categories);
+            await _context.SaveChangesAsync();
+
+            // Create sample products
+            var products = new[]
+            {
+                new Product { Name = "Caesar Salad", Price = 12.99, CategoryId = categories[0].Id },
+                new Product { Name = "Garlic Bread", Price = 8.99, CategoryId = categories[0].Id },
+                new Product { Name = "Grilled Salmon", Price = 24.99, CategoryId = categories[1].Id },
+                new Product { Name = "Beef Steak", Price = 28.99, CategoryId = categories[1].Id },
+                new Product { Name = "Chicken Pasta", Price = 18.99, CategoryId = categories[1].Id },
+                new Product { Name = "Chocolate Cake", Price = 9.99, CategoryId = categories[2].Id },
+                new Product { Name = "Ice Cream", Price = 6.99, CategoryId = categories[2].Id }
+            };
+
+            _context.Products.AddRange(products);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Sample products created successfully" });
+        }
     }
 }
