@@ -3,6 +3,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using WhiskTakers.Infrastructure;
+using WhiskTakers.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace WhiskTakers.API.Controllers
 {
@@ -11,23 +15,41 @@ namespace WhiskTakers.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly WhiskTakersDbContext _context;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, WhiskTakersDbContext context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // Simple validation - in production, check against database
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
                 return BadRequest(new { message = "Email and password are required" });
             }
 
-            // Demo users - replace with database lookup
-            var users = new[]
+            // Check database first
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user != null && VerifyPassword(request.Password, user.Password))
+            {
+                var token = GenerateJwtToken(user.Email, user.Name, user.Role);
+                return Ok(new
+                {
+                    token = token,
+                    user = new
+                    {
+                        email = user.Email,
+                        name = user.Name,
+                        role = user.Role
+                    }
+                });
+            }
+
+            // Fallback to demo users for existing functionality
+            var demoUsers = new[]
             {
                 new { Email = "admin@whisktakers.com", Password = "admin123", Name = "Admin", Role = "admin" },
                 new { Email = "waiter1@whisktakers.com", Password = "waiter123", Name = "John", Role = "waiter" },
@@ -36,24 +58,59 @@ namespace WhiskTakers.API.Controllers
                 new { Email = "client@whisktakers.com", Password = "client123", Name = "Guest", Role = "client" }
             };
 
-            var user = users.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
-            if (user == null)
+            var demoUser = demoUsers.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            if (demoUser == null)
             {
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            var token = GenerateJwtToken(user.Email, user.Name, user.Role);
-
+            var demoToken = GenerateJwtToken(demoUser.Email, demoUser.Name, demoUser.Role);
             return Ok(new
             {
-                token = token,
+                token = demoToken,
                 user = new
                 {
-                    email = user.Email,
-                    name = user.Name,
-                    role = user.Role
+                    email = demoUser.Email,
+                    name = demoUser.Name,
+                    role = demoUser.Role
                 }
             });
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Email) || 
+                string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Role))
+            {
+                return BadRequest(new { message = "All fields are required" });
+            }
+
+            if (request.Role != "waiter" && request.Role != "chef")
+            {
+                return BadRequest(new { message = "Role must be either 'waiter' or 'chef'" });
+            }
+
+            // Check if user already exists
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (existingUser != null)
+            {
+                return BadRequest(new { message = "User with this email already exists" });
+            }
+
+            // Create new user
+            var user = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                Password = HashPassword(request.Password),
+                Role = request.Role
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "User created successfully" });
         }
 
         private string GenerateJwtToken(string email, string name, string role)
@@ -79,11 +136,32 @@ namespace WhiskTakers.API.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        private string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            var hashedInput = HashPassword(password);
+            return hashedInput == hashedPassword;
+        }
     }
 
     public class LoginRequest
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
     }
 }
