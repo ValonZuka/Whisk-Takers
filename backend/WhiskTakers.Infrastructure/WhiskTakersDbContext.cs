@@ -12,9 +12,13 @@ namespace WhiskTakers.Infrastructure
 
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Fabrika> Fabrika { get; set; }
+        public DbSet<Puntori> Puntori { get; set; }
+    
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +33,18 @@ namespace WhiskTakers.Infrastructure
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict); 
+
+                
+            modelBuilder.Entity<Fabrika>()
+                .HasMany(f => f.Puntori)
+                .WithOne(p => p.Fabrika)
+                .HasForeignKey(p => p.FabrikaId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Puntori>()
+                .HasOne(p => p.Fabrika)
+                .WithMany(f => f.Puntori)
+                .HasForeignKey(p => p.FabrikaId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -145,8 +145,8 @@ C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\Whi
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Core.dll
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Infrastructure.dll
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Application.pdb
-C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Infrastructure.pdb
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Core.pdb
+C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\bin\Debug\net8.0\WhiskTakers.Infrastructure.pdb
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\obj\Debug\net8.0\WhiskTakers.API.csproj.AssemblyReference.cache
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\obj\Debug\net8.0\WhiskTakers.API.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\loni1\Desktop\Whisk-Takers\backend\WhiskTakers.API\obj\Debug\net8.0\WhiskTakers.API.AssemblyInfoInputs.cache

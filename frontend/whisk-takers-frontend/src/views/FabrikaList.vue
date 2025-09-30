@@ -1,0 +1,233 @@
+<template>
+  <div class="min-h-screen bg-emerald-950 text-emerald-50">
+    <div class="max-w-6xl mx-auto px-4 py-10">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+          <router-link 
+            to="/" 
+            class="text-emerald-300 hover:text-emerald-200 transition"
+          >
+            ← Back to Home
+          </router-link>
+          <h1 class="text-3xl font-bold text-yellow-300">Fabrika Management</h1>
+        </div>
+        <div class="flex gap-2">
+          <button 
+            @click="showCreateForm = true" 
+            class="rounded bg-emerald-600 text-white font-semibold px-4 py-2 hover:bg-emerald-700 transition"
+          >
+            Add Fabrika
+          </button>
+          <button 
+            @click="seedData" 
+            class="rounded bg-yellow-600 text-white font-semibold px-4 py-2 hover:bg-yellow-700 transition"
+          >
+            Seed Data
+          </button>
+          <button 
+            @click="loadFabrika" 
+            class="rounded bg-blue-600 text-white font-semibold px-4 py-2 hover:bg-blue-700 transition"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Create/Edit Form Modal -->
+      <div v-if="showCreateForm || editingFabrika" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-emerald-900 p-6 rounded-lg w-96 max-w-full mx-4">
+          <h2 class="text-xl font-bold text-yellow-300 mb-4">
+            {{ editingFabrika ? 'Edit Fabrika' : 'Create New Fabrika' }}
+          </h2>
+          
+          <form @submit.prevent="saveFabrika" class="space-y-4">
+            <div>
+              <label class="block text-emerald-200 text-sm font-medium mb-2">Emri i Fabrikës</label>
+              <input 
+                v-model="formData.emriFabrikes"
+                type="text" 
+                required
+                class="w-full px-3 py-2 bg-emerald-800 border border-emerald-600 rounded-md text-emerald-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                placeholder="Enter factory name"
+              />
+            </div>
+            
+            <div>
+              <label class="block text-emerald-200 text-sm font-medium mb-2">Adresa e Fabrikës</label>
+              <input 
+                v-model="formData.adresaFabrikes"
+                type="text" 
+                required
+                class="w-full px-3 py-2 bg-emerald-800 border border-emerald-600 rounded-md text-emerald-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                placeholder="Enter factory address"
+              />
+            </div>
+            
+            <div class="flex gap-2 pt-4">
+              <button 
+                type="submit" 
+                class="flex-1 bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-emerald-700 transition"
+              >
+                {{ editingFabrika ? 'Update' : 'Create' }}
+              </button>
+              <button 
+                type="button" 
+                @click="cancelForm"
+                class="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Fabrika List -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          v-for="fabrika in fabrika" 
+          :key="fabrika.id"
+          class="rounded-lg border border-yellow-500/30 p-6 bg-emerald-900/60 shadow-[0_0_25px_rgba(16,185,129,0.15)] hover:shadow-[0_0_35px_rgba(16,185,129,0.25)] transition-all"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-xl font-bold text-yellow-300">{{ fabrika.emriFabrikes }}</h3>
+            <div class="flex gap-2">
+              <button 
+                @click="editFabrika(fabrika)"
+                class="text-blue-400 hover:text-blue-300 transition"
+                title="Edit"
+              >
+                ✏️
+              </button>
+              <button 
+                @click="deleteFabrika(fabrika.id)"
+                class="text-red-400 hover:text-red-300 transition"
+                title="Delete"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+          
+          <p class="text-emerald-200 mb-4">{{ fabrika.adresaFabrikes }}</p>
+          
+          <div class="border-t border-emerald-700 pt-4">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-emerald-300">Puntori:</span>
+              <span class="text-yellow-300 font-semibold">{{ fabrika.puntori.length }}</span>
+            </div>
+            
+            <div v-if="fabrika.puntori.length > 0" class="space-y-1">
+              <div 
+                v-for="puntori in fabrika.puntori.slice(0, 3)" 
+                :key="puntori.id"
+                class="text-sm text-emerald-200"
+              >
+                {{ puntori.emri }} {{ puntori.mbiemri }} - {{ puntori.pozita }}
+              </div>
+              <div v-if="fabrika.puntori.length > 3" class="text-sm text-emerald-300">
+                +{{ fabrika.puntori.length - 3 }} more...
+              </div>
+            </div>
+            <div v-else class="text-sm text-emerald-400">
+              No puntori assigned
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="fabrika.length === 0" class="text-center py-12">
+        <div class="text-6xl mb-4">🏭</div>
+        <h3 class="text-xl font-semibold text-emerald-300 mb-2">No Fabrika Found</h3>
+        <p class="text-emerald-400 mb-4">Get started by creating your first fabrika or seeding sample data.</p>
+        <button 
+          @click="seedData" 
+          class="rounded bg-yellow-600 text-white font-semibold px-6 py-2 hover:bg-yellow-700 transition"
+        >
+          Seed Sample Data
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { fetchFabrika, createFabrika, updateFabrika, deleteFabrika, seedFabrika, type FabrikaDto, type FabrikaCreateDto } from '../api/fabrika'
+
+const fabrika = ref<FabrikaDto[]>([])
+const showCreateForm = ref(false)
+const editingFabrika = ref<FabrikaDto | null>(null)
+const formData = ref<FabrikaCreateDto>({
+  emriFabrikes: '',
+  adresaFabrikes: ''
+})
+
+async function loadFabrika() {
+  try {
+    fabrika.value = await fetchFabrika()
+  } catch (error) {
+    console.error('Error loading fabrika:', error)
+    alert('Error loading fabrika. Please make sure the backend server is running and the database is set up.')
+  }
+}
+
+async function saveFabrika() {
+  try {
+    if (editingFabrika.value) {
+      await updateFabrika(editingFabrika.value.id, formData.value)
+    } else {
+      await createFabrika(formData.value)
+    }
+    
+    await loadFabrika()
+    cancelForm()
+  } catch (error) {
+    console.error('Error saving fabrika:', error)
+  }
+}
+
+function editFabrika(fabrika: FabrikaDto) {
+  editingFabrika.value = fabrika
+  formData.value = {
+    emriFabrikes: fabrika.emriFabrikes,
+    adresaFabrikes: fabrika.adresaFabrikes
+  }
+}
+
+async function deleteFabrika(id: number) {
+  if (confirm('Are you sure you want to delete this fabrika? This will also delete all associated puntori.')) {
+    try {
+      await deleteFabrika(id)
+      await loadFabrika()
+    } catch (error) {
+      console.error('Error deleting fabrika:', error)
+    }
+  }
+}
+
+async function seedData() {
+  try {
+    await seedFabrika()
+    await loadFabrika()
+    alert('Sample data seeded successfully!')
+  } catch (error) {
+    console.error('Error seeding data:', error)
+    alert('Error seeding data. Please make sure the backend server is running and the database is set up.')
+  }
+}
+
+function cancelForm() {
+  showCreateForm.value = false
+  editingFabrika.value = null
+  formData.value = {
+    emriFabrikes: '',
+    adresaFabrikes: ''
+  }
+}
+
+onMounted(() => {
+  loadFabrika()
+})
+</script>

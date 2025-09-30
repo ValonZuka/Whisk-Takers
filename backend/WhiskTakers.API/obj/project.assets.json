@@ -4464,6 +4464,7 @@
       "Serilog.AspNetCore >= 9.0.0",
       "Swashbuckle.AspNetCore >= 9.0.4",
       "WhiskTakers.Application >= 1.0.0",
+      "WhiskTakers.Core >= 1.0.0",
       "WhiskTakers.Infrastructure >= 1.0.0"
     ]
   },
@@ -4494,6 +4495,9 @@
           "projectReferences": {
             "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj": {
               "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Application\\WhiskTakers.Application.csproj"
+            },
+            "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Core\\WhiskTakers.Core.csproj": {
+              "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Core\\WhiskTakers.Core.csproj"
             },
             "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Infrastructure\\WhiskTakers.Infrastructure.csproj": {
               "projectPath": "C:\\Users\\loni1\\Desktop\\Whisk-Takers\\backend\\WhiskTakers.Infrastructure\\WhiskTakers.Infrastructure.csproj"

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WhiskTakers.Application\WhiskTakers.Application.csproj" />
+    <ProjectReference Include="..\WhiskTakers.Core\WhiskTakers.Core.csproj" />
     <ProjectReference Include="..\WhiskTakers.Infrastructure\WhiskTakers.Infrastructure.csproj" />
   </ItemGroup>
 

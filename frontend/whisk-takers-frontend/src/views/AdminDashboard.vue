@@ -10,6 +10,22 @@
           <button @click="logout" class="rounded bg-yellow-500 text-emerald-950 font-semibold px-3 py-1">Sign out</button>
         </div>
       </div>
+      
+      <!-- Management Links -->
+      <div class="mb-6 flex gap-4">
+        <router-link 
+          to="/fabrika" 
+          class="rounded bg-blue-600 text-white font-semibold px-4 py-2 hover:bg-blue-700 transition"
+        >
+          🏭 Manage Fabrika
+        </router-link>
+        <router-link 
+          to="/puntori" 
+          class="rounded bg-purple-600 text-white font-semibold px-4 py-2 hover:bg-purple-700 transition"
+        >
+          👷 Manage Puntori
+        </router-link>
+      </div>
       <h1 class="text-3xl font-bold text-yellow-300 mb-6">Admin Dashboard</h1>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
