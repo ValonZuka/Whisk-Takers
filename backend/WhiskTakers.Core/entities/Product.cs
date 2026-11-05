@@ -9,6 +9,7 @@ namespace WhiskTakers.Core.Entities
         public double Price { get; set; }
         public double UnitCost { get; set; }
         public int PrepMinutes { get; set; } = 10;
+        public bool IsAvailable { get; set; } = true;
 
         public Category? Category { get; set; }
         public int CategoryId { get; set; }

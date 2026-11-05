@@ -21,7 +21,10 @@ namespace WhiskTakers.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _context.Products
+            var query = _context.Products.AsQueryable();
+            if (!User.IsInRole("admin") && !User.IsInRole("chef"))
+                query = query.Where(product => product.IsAvailable);
+            var products = await query
                 .Include(p => p.Category)
                 .ToListAsync();
 
@@ -34,7 +37,8 @@ namespace WhiskTakers.API.Controllers
                 Price = p.Price,
                 UnitCost = p.UnitCost,
                 PrepMinutes = p.PrepMinutes,
-                CategoryName = p.Category?.Name ?? ""
+                CategoryName = p.Category?.Name ?? "",
+                IsAvailable = p.IsAvailable
             });
 
             return Ok(response);
@@ -47,7 +51,7 @@ namespace WhiskTakers.API.Controllers
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product == null) return NotFound();
+            if (product == null || (!product.IsAvailable && !User.IsInRole("admin") && !User.IsInRole("chef"))) return NotFound();
 
             var response = new ProductResponseDto
             {
@@ -58,7 +62,8 @@ namespace WhiskTakers.API.Controllers
                 Price = product.Price,
                 UnitCost = product.UnitCost,
                 PrepMinutes = product.PrepMinutes,
-                CategoryName = product.Category?.Name ?? ""
+                CategoryName = product.Category?.Name ?? "",
+                IsAvailable = product.IsAvailable
             };
 
             return Ok(response);
@@ -78,7 +83,8 @@ namespace WhiskTakers.API.Controllers
                 Price = dto.Price,
                 UnitCost = dto.UnitCost,
                 PrepMinutes = dto.PrepMinutes,
-                CategoryId = dto.CategoryId
+                CategoryId = dto.CategoryId,
+                IsAvailable = dto.IsAvailable
             };
 
             _context.Products.Add(product);
@@ -93,7 +99,8 @@ namespace WhiskTakers.API.Controllers
                 Price = product.Price,
                 UnitCost = product.UnitCost,
                 PrepMinutes = product.PrepMinutes,
-                CategoryName = _context.Categories.FirstOrDefault(c => c.Id == dto.CategoryId)?.Name ?? ""
+                CategoryName = _context.Categories.FirstOrDefault(c => c.Id == dto.CategoryId)?.Name ?? "",
+                IsAvailable = product.IsAvailable
             };
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, response);
@@ -115,6 +122,7 @@ namespace WhiskTakers.API.Controllers
             product.UnitCost = dto.UnitCost;
             product.PrepMinutes = dto.PrepMinutes;
             product.CategoryId = dto.CategoryId; // përditëso Category
+            if (dto.IsAvailable.HasValue) product.IsAvailable = dto.IsAvailable.Value;
 
             await _context.SaveChangesAsync();
             return NoContent();

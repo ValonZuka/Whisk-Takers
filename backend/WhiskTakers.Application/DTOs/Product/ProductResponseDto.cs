@@ -10,5 +10,6 @@ namespace WhiskTakers.Application.DTOs.Products
         public double UnitCost { get; set; }
         public int PrepMinutes { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; } = true;
     }
 }

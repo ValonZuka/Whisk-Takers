@@ -97,7 +97,7 @@ namespace WhiskTakers.API.Controllers
 
             if (dto.Items.Any(item => item.Quantity < 1)) return BadRequest("Item quantities must be at least one.");
             var productIds = dto.Items.Select(item => item.ProductId).Distinct().ToArray();
-            var products = await _context.Products.Where(product => productIds.Contains(product.Id)).ToDictionaryAsync(product => product.Id);
+            var products = await _context.Products.Where(product => productIds.Contains(product.Id) && product.IsAvailable).ToDictionaryAsync(product => product.Id);
             if (productIds.Any(productId => !products.ContainsKey(productId))) return BadRequest("One or more products do not exist.");
 
             
@@ -155,7 +155,7 @@ namespace WhiskTakers.API.Controllers
             if (order == null) return NotFound();
 
             var productIds = dto.Items.Select(item => item.ProductId).Distinct().ToArray();
-            var products = await _context.Products.Where(product => productIds.Contains(product.Id)).ToDictionaryAsync(product => product.Id);
+            var products = await _context.Products.Where(product => productIds.Contains(product.Id) && product.IsAvailable).ToDictionaryAsync(product => product.Id);
             if (productIds.Any(productId => !products.ContainsKey(productId))) return BadRequest("One or more products do not exist.");
 
             order.TableNumber = dto.TableNumber;
