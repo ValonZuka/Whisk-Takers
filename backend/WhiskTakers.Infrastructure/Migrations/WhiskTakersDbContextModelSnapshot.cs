@@ -39,6 +39,24 @@ namespace WhiskTakers.Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("WhiskTakers.Core.Entities.FloorPlanSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AreasJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TablesJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FloorPlanSettings");
+                });
+
             modelBuilder.Entity("WhiskTakers.Core.Entities.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -50,11 +68,17 @@ namespace WhiskTakers.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("PreparationStartedAtUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("TableNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TimerExtensionMinutes")
                         .HasColumnType("int");
 
                     b.Property<string>("WaiterEmail")
@@ -85,6 +109,15 @@ namespace WhiskTakers.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("PrepMinutesAtOrder")
+                        .HasColumnType("int");
+
+                    b.Property<double>("UnitPriceAtOrder")
+                        .HasColumnType("double");
+
+                    b.Property<double>("UnitCostAtOrder")
+                        .HasColumnType("double");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
@@ -105,11 +138,25 @@ namespace WhiskTakers.Infrastructure.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("PrepMinutes")
+                        .HasColumnType("int");
+
                     b.Property<double>("Price")
+                        .HasColumnType("double");
+
+                    b.Property<double>("UnitCost")
                         .HasColumnType("double");
 
                     b.HasKey("Id");

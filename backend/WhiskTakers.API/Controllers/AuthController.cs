@@ -26,14 +26,18 @@ namespace WhiskTakers.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            if (string.IsNullOrWhiteSpace(request.Password) || request.Role is not ("admin" or "waiter" or "chef"))
             {
-                return BadRequest(new { message = "Email and password are required" });
+                return BadRequest(new { message = "Choose a valid staff role and enter your password." });
             }
 
-            // Check database first
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user != null && VerifyPassword(request.Password, user.Password))
+            // Staff sign in with the role selected on the welcome screen and their password.
+            var staff = await _context.Users.Where(u => u.Role == request.Role).ToListAsync();
+            var matches = staff.Where(u => VerifyPassword(request.Password, u.Password)).ToList();
+            if (matches.Count > 1)
+                return Conflict(new { message = "This password is shared by multiple staff accounts. Ask the admin to assign a unique password." });
+            var user = matches.SingleOrDefault();
+            if (user != null)
             {
                 var token = GenerateJwtToken(user.Email, user.Name, user.Role);
                 return Ok(new
@@ -53,12 +57,12 @@ namespace WhiskTakers.API.Controllers
             {
                 new { Email = "admin@whisktakers.com", Password = "admin123", Name = "Admin", Role = "admin" },
                 new { Email = "waiter1@whisktakers.com", Password = "waiter123", Name = "John", Role = "waiter" },
-                new { Email = "waiter2@whisktakers.com", Password = "waiter123", Name = "Sydney", Role = "waiter" },
+                new { Email = "waiter2@whisktakers.com", Password = "sydney123", Name = "Sydney", Role = "waiter" },
                 new { Email = "chef@whisktakers.com", Password = "chef123", Name = "Chef Marco", Role = "chef" },
                 new { Email = "client@whisktakers.com", Password = "client123", Name = "Guest", Role = "client" }
             };
 
-            var demoUser = demoUsers.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            var demoUser = demoUsers.FirstOrDefault(u => u.Role == request.Role && u.Password == request.Password);
             if (demoUser == null)
             {
                 return Unauthorized(new { message = "Invalid credentials" });
@@ -80,10 +84,9 @@ namespace WhiskTakers.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Email) || 
-                string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Role))
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.Role))
             {
-                return BadRequest(new { message = "All fields are required" });
+                return BadRequest(new { message = "Name, password and role are required." });
             }
 
             if (request.Role != "waiter" && request.Role != "chef")
@@ -91,19 +94,19 @@ namespace WhiskTakers.API.Controllers
                 return BadRequest(new { message = "Role must be either 'waiter' or 'chef'" });
             }
 
-            // Check if user already exists
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (existingUser != null)
+            var passwordHash = HashPassword(request.Password);
+            var existingPassword = await _context.Users.AnyAsync(u => u.Role == request.Role && u.Password == passwordHash);
+            if (existingPassword)
             {
-                return BadRequest(new { message = "User with this email already exists" });
+                return BadRequest(new { message = "Each staff member needs a unique password for password-only sign in." });
             }
 
             // Create new user
             var user = new User
             {
                 Name = request.Name,
-                Email = request.Email,
-                Password = HashPassword(request.Password),
+                Email = $"staff-{Guid.NewGuid():N}@whisktakers.local",
+                Password = passwordHash,
                 Role = request.Role
             };
 
@@ -122,7 +125,6 @@ namespace WhiskTakers.API.Controllers
             {
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Name, name),
-                new Claim(ClaimTypes.Role, role),
                 new Claim("role", role)
             };
 
@@ -153,14 +155,13 @@ namespace WhiskTakers.API.Controllers
 
     public class LoginRequest
     {
-        public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
     }
 
     public class RegisterRequest
     {
         public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
     }

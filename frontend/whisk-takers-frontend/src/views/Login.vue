@@ -1,89 +1,42 @@
 <template>
-  <div class="min-h-screen bg-emerald-950 text-emerald-50 flex items-center justify-center px-4">
-    <div class="w-full max-w-md rounded-2xl border border-yellow-500/40 bg-emerald-900/60 p-6">
-      <h1 class="text-2xl font-bold text-yellow-300">Sign in</h1>
-      <p class="text-sm text-emerald-200">Role: <span class="font-semibold">{{ role }}</span></p>
-
+  <main class="flex min-h-screen items-center justify-center bg-emerald-950 px-4 text-emerald-50">
+    <section class="w-full max-w-md rounded-2xl border border-yellow-500/40 bg-emerald-900/60 p-7">
+      <h1 class="text-2xl font-bold text-yellow-300">{{ tr('Sign in', 'Hyr') }}</h1>
+      <p class="mt-1 text-sm text-emerald-200">{{ tr('Role', 'Roli') }}: {{ roleLabel }}</p>
       <form class="mt-6 space-y-4" @submit.prevent="login">
-        <div>
-          <label class="block text-sm mb-1">Email</label>
-          <input v-model="email" type="email" class="w-full rounded bg-emerald-950 border border-emerald-700 px-3 py-2" placeholder="email@example.com" />
-          <p v-if="emailError" class="text-sm text-red-300 mt-1">{{ emailError }}</p>
-        </div>
-        <div>
-          <label class="block text-sm mb-1">Password</label>
-          <input v-model="password" type="password" class="w-full rounded bg-emerald-950 border border-emerald-700 px-3 py-2" placeholder="Your password" />
-          <p v-if="passwordError" class="text-sm text-red-300 mt-1">{{ passwordError }}</p>
-        </div>
-        <div>
-          <label class="block text-sm mb-1">Name</label>
-          <input v-model="name" class="w-full rounded bg-emerald-950 border border-emerald-700 px-3 py-2" placeholder="Your name" />
-        </div>
-        <button class="w-full rounded bg-yellow-500 text-emerald-950 font-bold py-2">Continue</button>
-        <p v-if="authError" class="text-sm text-red-300 text-center">{{ authError }}</p>
+        <label class="block text-sm">{{ tr('Password', 'Fjalëkalimi') }}
+          <input v-model="password" required minlength="6" type="password" autocomplete="current-password" autofocus class="mt-1 w-full rounded border border-emerald-700 bg-emerald-950 px-3 py-3" :placeholder="tr('Enter your password', 'Shkruaj fjalëkalimin')" />
+        </label>
+        <p v-if="authError" class="text-sm text-red-300">{{ authError }}</p>
+        <button :disabled="loading" class="w-full rounded bg-yellow-500 py-3 font-bold text-emerald-950 disabled:opacity-50">{{ loading ? tr('Signing in…', 'Duke hyrë…') : tr('Continue', 'Vazhdo') }}</button>
       </form>
-    </div>
-  </div>
+      <p class="mt-5 text-center text-sm text-emerald-200"><RouterLink to="/" class="underline">{{ tr('Back', 'Kthehu') }}</RouterLink></p>
+    </section>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { encodeToken, setToken } from '../store/auth'
-import type { UserRole } from '../store/auth'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import api from '../api/axios'
+import { setToken, type UserRole } from '../store/auth'
+import { tr } from '../store/preferences'
 
-const route = useRoute()
-const router = useRouter()
-const role = (route.query.role as UserRole) || 'client'
-const name = ref('')
-const email = ref('')
-const password = ref('')
-const emailError = ref('')
-const passwordError = ref('')
-const authError = ref('')
-
+const route = useRoute(), router = useRouter()
+const roles: UserRole[] = ['admin', 'waiter', 'chef']
+const requestedRole = route.query.role as UserRole
+const role = roles.includes(requestedRole) ? requestedRole : 'waiter'
+const roleLabel = computed(() => ({ admin: tr('Admin', 'Administratori'), waiter: tr('Waiter', 'Kamarieri'), chef: tr('Chef', 'Kuzhinieri'), client: 'Client' })[role])
+const password = ref(''), authError = ref(''), loading = ref(false)
 async function login() {
-  emailError.value = ''
-  passwordError.value = ''
-  authError.value = ''
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    emailError.value = 'Enter a valid email.'
-  }
-  if (!password.value || password.value.length < 6) {
-    passwordError.value = 'Password must be at least 6 characters.'
-  }
-  if (emailError.value || passwordError.value) return
-
-  const result = await fakeSignIn(email.value, password.value, role)
-  if (!result) {
-    authError.value = 'Incorrect credentials.'
-    return
-  }
-  
-  // Store the real JWT token from backend
-  setToken(result.token)
-  router.replace(`/${result.user.role}`)
-}
-
-async function fakeSignIn(email: string, password: string, role: UserRole) {
+  loading.value = true; authError.value = ''
   try {
-    const response = await fetch('http://localhost:5058/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password })
-    })
-    
-    if (!response.ok) return false
-    
-    const data = await response.json()
-    return { token: data.token, user: data.user }
-  } catch {
-    return false
-  }
+    const { data } = await api.post('/auth/login', { role, password: password.value })
+    setToken(data.token)
+    sessionStorage.setItem('whisk-welcome-name', data.user.name)
+    await router.replace(`/${data.user.role}`)
+  } catch (error: any) {
+    authError.value = error.response?.data?.message || tr('Incorrect password.', 'Fjalëkalimi nuk është i saktë.')
+  } finally { loading.value = false }
 }
 </script>
-
-

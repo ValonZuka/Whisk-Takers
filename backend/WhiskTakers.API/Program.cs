@@ -46,6 +46,13 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<WhiskTakersDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
 }

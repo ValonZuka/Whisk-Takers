@@ -6,6 +6,8 @@ namespace WhiskTakers.Core.Entities
 
         public int TableNumber { get; set; } 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? PreparationStartedAtUtc { get; set; }
+        public int TimerExtensionMinutes { get; set; }
         public string Status { get; set; } = "Pending"; 
         public string? WaiterName { get; set; }
         public string? WaiterEmail { get; set; }
@@ -23,5 +25,8 @@ namespace WhiskTakers.Core.Entities
         public int OrderId { get; set; }
         public Order Order { get; set; }
         public int Quantity { get; set; }
+        public double UnitCostAtOrder { get; set; }
+        public double UnitPriceAtOrder { get; set; }
+        public int PrepMinutesAtOrder { get; set; } = 10;
     }
 }

@@ -18,17 +18,6 @@
         </router-link>
       </div>
 
-      <div class="mt-8 text-center">
-        <p class="text-emerald-200 mb-4">View our facilities and staff</p>
-        <div class="flex gap-4 justify-center">
-          <router-link to="/fabrika" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
-            View Fabrika
-          </router-link>
-          <router-link to="/puntori" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
-            View Puntori
-          </router-link>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -37,7 +26,7 @@
 import { useRouter } from 'vue-router'
 import type { UserRole } from '../store/auth'
 
-const roles = [
+const roles: Array<{ title: string; role: UserRole; description: string; path: string }> = [
   { title: 'Client', role: 'client', description: 'Browse and order dishes', path: '/client' },
   { title: 'Waiter', role: 'waiter', description: 'Create and manage orders', path: '/waiter' },
   { title: 'Chef', role: 'chef', description: 'Prepare and update statuses', path: '/chef' },
@@ -46,8 +35,8 @@ const roles = [
 
 const router = useRouter()
 function goLogin(role: UserRole) {
+  if (role === 'client') { router.push('/client'); return }
   router.push({ name: 'Login', query: { role } })
 }
 </script>
-
 

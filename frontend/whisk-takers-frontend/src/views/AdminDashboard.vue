@@ -1,269 +1,132 @@
 <template>
-  <div class="min-h-screen bg-emerald-950 text-emerald-50">
-    <div class="max-w-6xl mx-auto px-4 py-10">
-      <div class="flex items-center justify-between mb-6">
-        <div class="text-yellow-300 font-bold">Admin</div>
-        <div class="flex gap-2">
-          <button @click="refreshData" class="rounded bg-emerald-600 text-white font-semibold px-3 py-1 hover:bg-emerald-700 transition">
-            Refresh
-          </button>
-          <button @click="logout" class="rounded bg-yellow-500 text-emerald-950 font-semibold px-3 py-1">Sign out</button>
-        </div>
-      </div>
-      
-      <!-- Management Links -->
-      <div class="mb-6 flex gap-4">
-        <router-link 
-          to="/fabrika" 
-          class="rounded bg-blue-600 text-white font-semibold px-4 py-2 hover:bg-blue-700 transition"
-        >
-          🏭 Manage Fabrika
-        </router-link>
-        <router-link 
-          to="/puntori" 
-          class="rounded bg-purple-600 text-white font-semibold px-4 py-2 hover:bg-purple-700 transition"
-        >
-          👷 Manage Puntori
-        </router-link>
-      </div>
-      <h1 class="text-3xl font-bold text-yellow-300 mb-6">Admin Dashboard</h1>
+  <main class="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 sm:px-8">
+    <div class="mx-auto max-w-7xl">
+      <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div><p class="text-sm font-semibold uppercase tracking-[.2em] text-emerald-400">Whisk Takers · {{ tr('Operations', 'Operacionet') }}</p><h1 class="mt-2 text-3xl font-bold">{{ tr('Admin dashboard', 'Paneli i administratorit') }}</h1></div>
+        <div class="flex flex-wrap items-center gap-2"><PreferencesControls /><button @click="loadData" class="rounded-lg border border-slate-700 px-4 py-2 hover:bg-slate-800">{{ tr('Refresh', 'Rifresko') }}</button><button @click="logout" class="rounded-lg bg-emerald-400 px-4 py-2 font-semibold text-slate-950">{{ tr('Sign out', 'Dil') }}</button></div>
+      </header>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
-          <p class="text-sm text-emerald-200">Total Products</p>
-          <p class="text-3xl font-bold text-yellow-300">{{ products.length }}</p>
-        </div>
-        <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
-          <p class="text-sm text-emerald-200">Total Orders</p>
-          <p class="text-3xl font-bold text-yellow-300">{{ orders.length }}</p>
-        </div>
-        <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
-          <p class="text-sm text-emerald-200">Recent Sales</p>
-          <p class="text-3xl font-bold text-yellow-300">${{ todaysSales.toFixed(2) }}</p>
-          <p class="text-xs text-emerald-300 mt-1">{{ todaysOrders.length }} completed orders</p>
-        </div>
-        <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
-          <p class="text-sm text-emerald-200">Pending Orders</p>
-          <p class="text-3xl font-bold text-yellow-300">{{ pending }}</p>
-        </div>
-      </div>
+      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article v-for="metric in metrics" :key="metric.label" class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><p class="text-sm text-slate-400">{{ metric.label }}</p><p class="mt-2 text-3xl font-bold text-white">{{ metric.value }}</p></article>
+      </section>
 
-      <!-- Sales Analytics Section -->
-      <div class="mt-8">
-        <h2 class="text-2xl font-semibold mb-4">Recent Sales Analytics</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60">
-            <h3 class="text-lg font-semibold text-yellow-300 mb-3">Best Selling Dishes</h3>
-            <div v-if="bestSellers.length === 0" class="text-emerald-300 text-sm">
-              No completed orders recently
-            </div>
-            <ul v-else class="space-y-2">
-              <li v-for="(dish, index) in bestSellers" :key="index" class="flex justify-between items-center">
-                <span class="text-emerald-200">{{ index + 1 }}. {{ dish.productName }}</span>
-                <span class="text-yellow-300 font-semibold">${{ dish.totalSales.toFixed(2) }}</span>
-              </li>
-            </ul>
-          </div>
-          <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60">
-            <h3 class="text-lg font-semibold text-yellow-300 mb-3">Worst Selling Dishes</h3>
-            <div v-if="worstSellers.length === 0" class="text-emerald-300 text-sm">
-              No completed orders recently
-            </div>
-            <ul v-else class="space-y-2">
-              <li v-for="(dish, index) in worstSellers" :key="index" class="flex justify-between items-center">
-                <span class="text-emerald-200">{{ index + 1 }}. {{ dish.productName }}</span>
-                <span class="text-yellow-300 font-semibold">${{ dish.totalSales.toFixed(2) }}</span>
-              </li>
-            </ul>
+      <section class="mt-7 grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-xl font-semibold">{{ tr('Floor plan', 'Plani i sallës') }}</h2><p class="mt-1 text-sm text-slate-400">{{ tr('Move and resize tables. Save the shared layout so waiters see it too.', 'Lëviz dhe ndrysho madhësinë e tavolinave. Ruaje planin e përbashkët që ta shohin kamarierët.') }} <span :class="floorPlanSync === 'saved' ? 'text-emerald-300' : floorPlanSync === 'error' ? 'text-rose-300' : 'text-amber-300'">· {{ floorPlanSync === 'saved' ? tr('Synced', 'U sinkronizua') : floorPlanSync === 'error' ? tr('Sync failed', 'Sinkronizimi dështoi') : floorPlanSync === 'loading' ? tr('Syncing…', 'Duke sinkronizuar…') : tr('Local only', 'Vetëm lokalisht') }}</span></p></div><div class="flex flex-wrap gap-2"><input v-model="newAreaName" :placeholder="tr('New area', 'Hapësirë e re')" class="w-32 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"/><button @click="addArea" class="rounded-lg border border-slate-700 px-3 py-2 text-sm">＋ {{ tr('Area', 'Hapësirë') }}</button><button @click="addTable" class="rounded-lg bg-emerald-400 px-3 py-2 text-sm font-semibold text-slate-950">＋ {{ tr('Table', 'Tavolinë') }}</button><button @click="saveLayout" class="rounded-lg border border-emerald-500 px-3 py-2 text-sm text-emerald-300">{{ tr('Save layout', 'Ruaj planin') }}</button></div></div>
+          <div class="mt-5 flex flex-wrap gap-2"><button v-for="area in diningAreas" :key="area.id" @click="selectedAreaId = area.id" class="flex items-center gap-2 rounded-full border px-3 py-2 text-sm" :class="selectedAreaId === area.id ? 'border-white/30 bg-white/10 text-white' : 'border-slate-700 text-slate-300'"><span class="h-3 w-3 rounded-full" :style="{ background: area.color }"></span>{{ area.name }} <span class="text-xs text-slate-400">{{ tablesInArea(area.id).length }}</span></button></div>
+          <div v-if="activeArea" class="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-slate-950 p-3"><label class="text-xs text-slate-400">{{ tr('Area name', 'Emri') }}<input v-model="activeArea.name" class="ml-2 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-white"/></label><label class="text-xs text-slate-400">{{ tr('Area color', 'Ngjyra') }}<input v-model="activeArea.color" type="color" class="ml-2 h-8 w-10 cursor-pointer rounded border-0 bg-transparent align-middle"/></label><button @click="removeArea" :disabled="diningAreas.length < 2 || tablesInArea(activeArea.id).length > 0" class="ml-auto text-xs text-rose-300 disabled:opacity-30">{{ tr('Remove empty area', 'Hiq hapësirën bosh') }}</button></div>
+          <div ref="floorCanvas" class="relative mt-4 h-[480px] overflow-hidden rounded-xl border" :style="{ borderColor: activeArea?.color, backgroundColor: `${activeArea?.color}20`, backgroundImage: 'radial-gradient(#ffffff30 1px, transparent 1px)', backgroundSize: '22px 22px' }">
+            <article v-for="table in areaTables" :key="table.id" @pointermove="moveTable" @pointerup="endTablePointer" @pointercancel="endTablePointer" class="absolute select-none rounded-2xl border-2 p-2 text-center shadow-lg touch-none" :class="activeTableIds.includes(table.id) ? 'border-amber-300' : 'border-white/40'" :style="{ left: `${table.x}%`, top: `${table.y}px`, width: `${table.width}px`, height: `${table.height}px`, backgroundColor: activeArea?.color, zIndex: activeTableIds.includes(table.id) ? 2 : 1 }">
+              <div class="flex items-center justify-between gap-1"><button @pointerdown.stop.prevent="startTablePointer($event, table, 'move')" class="cursor-grab text-white/70 active:cursor-grabbing" :aria-label="tr('Move table', 'Lëviz tavolinën')">⠿</button><input v-model="table.name" :aria-label="tr('Table name', 'Emri i tavolinës')" class="min-w-0 w-full bg-transparent text-center text-sm font-bold text-white outline-none"/><button @click="removeTable(table.id)" :disabled="activeTableIds.includes(table.id)" class="text-white/70 disabled:opacity-25">×</button></div>
+              <label class="mt-1 block text-xs text-white/80"><input v-model.number="table.seats" type="number" min="1" max="30" class="w-9 bg-transparent text-right text-white outline-none"/> {{ tr('seats', 'vende') }}</label>
+              <p class="mt-1 text-[10px]" :class="activeTableIds.includes(table.id) ? 'text-amber-200' : 'text-emerald-100'">{{ activeTableIds.includes(table.id) ? tr('Busy', 'Në përdorim') : tr('Available', 'E lirë') }}</p>
+              <button @pointerdown.stop.prevent="startTablePointer($event, table, 'resize')" class="absolute bottom-0 right-0 h-5 w-5 cursor-nwse-resize rounded-tl-lg bg-white/25 text-xs text-white" :aria-label="tr('Resize table', 'Ndrysho madhësinë')">↘</button>
+            </article>
+            <p v-if="!areaTables.length" class="p-6 text-sm text-slate-400">{{ tr('Add a table to this area to start arranging the floor.', 'Shto një tavolinë në këtë hapësirë për të rregulluar planin.') }}</p>
           </div>
         </div>
-      </div>
 
-      <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h2 class="text-2xl font-semibold mb-4">Products</h2>
-          <ul class="space-y-2">
-            <li v-for="p in products" :key="p.id" class="rounded border border-yellow-500/30 p-3 bg-emerald-900/60 flex justify-between shadow-sm hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] transition">
-              <span>{{ p.name }} ({{ p.categoryName }})</span>
-              <span class="text-yellow-300 font-semibold">$ {{ p.price.toFixed(2) }}</span>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h2 class="text-2xl font-semibold mb-4">Recent Orders</h2>
-          <ul class="space-y-2">
-            <li v-for="o in recentOrders" :key="o.id" class="rounded border border-yellow-500/30 p-3 bg-emerald-900/60 shadow-sm hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
-              <div class="flex justify-between">
-                <span>Table {{ o.tableNumber }}</span>
-                <span :class="statusClass(o.status)">{{ o.status }}</span>
-              </div>
-              <div class="text-sm text-emerald-200 mt-1">
-                Total: ${{ getOrderTotal(o).toFixed(2) }}
-              </div>
-              <ul class="mt-2 text-sm">
-                <li v-for="i in o.items" :key="i.productId">{{ i.productName }} x{{ i.quantity }}</li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
+        <aside class="rounded-2xl border border-emerald-900 bg-gradient-to-br from-emerald-950 to-slate-900 p-5">
+          <p class="text-sm font-semibold uppercase tracking-wider text-emerald-300">✦ {{ tr('AI sales assistant', 'Asistenti i shitjeve') }}</p><h2 class="mt-2 text-xl font-semibold">{{ tr('Menu signals', 'Sugjerime për menunë') }}</h2>
+          <p class="mt-2 text-xs leading-5 text-slate-400">{{ tr('Based on completed orders in the last 30 days. Treat low-volume signals as prompts to review, not automatic decisions.', 'Bazuar në porositë e përfunduara gjatë 30 ditëve të fundit. Sinjalet me pak të dhëna janë arsye për shqyrtim, jo vendime automatike.') }}</p>
+          <div v-if="!completedOrders.length" class="mt-5 rounded-xl bg-slate-950/70 p-4 text-sm text-slate-300">{{ tr('Complete a few orders to see reliable menu suggestions.', 'Përfundo disa porosi që të shfaqen sugjerime të dobishme.') }}</div>
+          <ul v-else class="mt-5 space-y-3"><li v-for="signal in menuSignals" :key="signal.productName" class="rounded-xl bg-slate-950/70 p-3"><div class="flex justify-between gap-3"><span class="font-medium">{{ signal.productName }}</span><span class="text-xs text-slate-400">{{ signal.quantity }} {{ tr('sold', 'të shitura') }}</span></div><p class="mt-1 text-sm" :class="signal.quantity === 0 ? 'text-amber-300' : 'text-emerald-300'">{{ signal.message }}</p></li></ul>
+          <p class="mt-4 text-xs text-slate-500">{{ tr('AI provider is not configured; these transparent suggestions use sales rules.', 'Ofruesi i AI-së nuk është konfiguruar; këto sugjerime transparente bazohen në rregulla shitjesh.') }}</p>
+        </aside>
+      </section>
+
+      <section class="mt-7 grid gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><h2 class="text-xl font-semibold">{{ tr('Menu performance · 30 days', 'Performanca e menusë · 30 ditë') }}</h2><div v-if="!rankedDishes.length" class="mt-4 text-sm text-slate-400">{{ tr('No completed order data for this period.', 'Nuk ka të dhëna porosish të përfunduara për këtë periudhë.') }}</div><div v-else class="mt-4 space-y-3"><div v-for="dish in rankedDishes" :key="dish.id"><div class="flex justify-between text-sm"><span>{{ dish.name }}</span><span>{{ dish.quantity }}× · {{ money(dish.revenue) }}</span></div><div class="mt-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-emerald-400" :style="{ width: `${Math.max(4, dish.quantity / maxDishQuantity * 100)}%` }"></div></div></div></div></div>
+        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><h2 class="text-xl font-semibold">{{ tr('Recent orders', 'Porositë e fundit') }}</h2><div class="mt-4 space-y-3"><article v-for="order in recentOrders" :key="order.id" class="rounded-xl bg-slate-950 p-3"><div class="flex justify-between"><strong>{{ tr('Table', 'Tavolina') }} {{ tableName(order.tableNumber) }}</strong><span class="text-sm text-emerald-300">{{ order.status }}</span></div><p class="mt-1 text-sm text-slate-400">{{ order.items.map(item => `${item.productName} ×${item.quantity}`).join(' · ') }}</p><p class="mt-1 text-right text-sm font-semibold">{{ money(orderTotal(order)) }}</p></article><p v-if="!recentOrders.length" class="text-sm text-slate-400">{{ tr('No orders yet.', 'Nuk ka ende porosi.') }}</p></div></div>
+      </section>
+
+      <section class="mt-7 grid gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><h2 class="text-xl font-semibold">{{ tr('Gross profit · last 30 days', 'Fitimi bruto · 30 ditët e fundit') }}</h2><p class="mt-1 text-xs text-slate-400">{{ tr('Uses the unit cost captured when each order was placed.', 'Përdor koston për njësi të ruajtur në momentin e porosisë.') }}</p><div v-if="!profitDishes.length" class="mt-4 rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400">{{ tr('Enter unit costs for menu items. New orders will then show reliable profit.', 'Vendos kostot për njësi të pjatave. Porositë e reja do të tregojnë fitimin real.') }}</div><div v-else class="mt-5 space-y-4"><div v-for="dish in profitDishes" :key="dish.id"><div class="flex justify-between text-sm"><span>{{ dish.name }}</span><span>{{ money(dish.revenue - dish.cost) }}</span></div><div class="mt-2 space-y-1"><div class="h-2 rounded bg-emerald-400" :style="{ width: `${dish.revenue / maxRevenue * 100}%` }"></div><div class="h-2 rounded bg-rose-400" :style="{ width: `${dish.cost / maxRevenue * 100}%` }"></div></div><p class="mt-1 text-xs text-slate-400">{{ tr('Sales', 'Shitje') }} {{ money(dish.revenue) }} · {{ tr('Cost', 'Kosto') }} {{ money(dish.cost) }} · {{ dish.quantity }}×</p></div></div><div class="mt-5 flex gap-4 text-xs text-slate-400"><span><i class="mr-1 inline-block h-2 w-2 rounded bg-emerald-400"></i>{{ tr('Sales', 'Shitje') }}</span><span><i class="mr-1 inline-block h-2 w-2 rounded bg-rose-400"></i>{{ tr('Cost', 'Kosto') }}</span></div></div>
+        <div class="rounded-2xl border-2 border-dashed border-emerald-800 bg-emerald-950/30 p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-300">{{ tr('What-if projection', 'Parashikimi i skenarit') }}</p><h2 class="mt-2 text-xl font-semibold">{{ tr('Try a new price or cost', 'Provo çmim ose kosto të re') }}</h2><p class="mt-1 text-xs leading-5 text-slate-400">{{ tr('Illustrates how profit changes if the last 30 days’ sales volume stayed the same. This is arithmetic, not an AI forecast.', 'Tregon si ndryshon fitimi nëse vëllimi i shitjeve të 30 ditëve të fundit mbetet i njëjtë. Është llogaritje, jo parashikim nga AI.') }}</p><select v-model.number="selectedScenarioProductId" @change="loadScenario" class="mt-4 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"><option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option></select><div class="mt-3 grid grid-cols-2 gap-3"><label class="text-xs text-slate-400">{{ tr('Scenario price per item (€)', 'Çmimi i skenarit për artikull (€)') }}<input v-model.number="scenarioPrice" type="number" min="0" step="0.01" class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"/></label><label class="text-xs text-slate-400">{{ tr('Scenario cost per item (€)', 'Kostoja e skenarit për artikull (€)') }}<input v-model.number="scenarioCost" type="number" min="0" step="0.01" class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"/></label></div><div v-if="scenarioHasInputs" class="mt-4 rounded-lg bg-slate-950/70 p-3"><div class="flex items-center justify-between"><p class="text-sm">{{ tr('Estimated gross profit', 'Fitimi bruto i përllogaritur') }}</p><p class="text-xl font-bold" :class="proposedScenarioProfit >= 0 ? 'text-emerald-300' : 'text-rose-300'">{{ money(proposedScenarioProfit) }}</p></div><p class="mt-1 text-xs text-slate-400">{{ scenarioUnits }} {{ tr('completed units ×', 'porcione të përfunduara ×') }} ({{ money(scenarioPrice) }} − {{ money(scenarioCost) }}) {{ tr('per unit', 'për porcion') }}.</p><p v-if="scenarioHasBaseline" class="mt-2 text-xs" :class="scenarioChange >= 0 ? 'text-emerald-300' : 'text-rose-300'">{{ tr('Change from current estimate', 'Ndryshimi nga vlerësimi aktual') }}: {{ scenarioChange >= 0 ? '+' : '' }}{{ money(scenarioChange) }}</p><p v-else class="mt-2 text-xs text-amber-300">{{ tr('Set and save this dish’s current unit cost in Menu Editor to compare with today’s estimate.', 'Vendos dhe ruaj koston aktuale për njësi te Redaktori i menusë për ta krahasuar me vlerësimin aktual.') }}</p></div><div v-else class="mt-4 rounded-lg border border-dashed border-slate-700 p-3 text-sm text-slate-400">{{ scenarioUnits ? tr('Enter both a scenario price and cost to see the estimate. Zero or blank values are not treated as real costs.', 'Shkruaj çmimin dhe koston e skenarit për të parë vlerësimin. Vlerat bosh ose zero nuk llogariten si kosto reale.') : tr('This dish has no completed sales in the last 30 days, so there is no volume to project.', 'Kjo pjatë nuk ka shitje të përfunduara gjatë 30 ditëve të fundit, ndaj nuk ka vëllim për llogaritje.') }}</div></div>
+      </section>
+
+      <section class="mt-7 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-xl font-semibold">{{ tr('Menu editor', 'Redaktori i menusë') }}</h2><p class="mt-1 text-sm text-slate-400">{{ tr('Create and edit dishes, descriptions, prices, and categories.', 'Krijo dhe ndrysho pjatat, përshkrimet, çmimet dhe kategoritë.') }}</p></div><button @click="seedMenu" class="rounded-lg border border-emerald-700 px-4 py-2 text-sm text-emerald-300">{{ tr('Add Whisk-Takers sample menu', 'Shto menunë shembull') }}</button></div>
+        <form @submit.prevent="createProduct" class="mt-4 grid gap-2 md:grid-cols-2"><input v-model="newProduct.name" required :placeholder="tr('Dish name', 'Emri i pjatës')" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"/><input v-model.number="newProduct.price" required type="number" min="0.01" step="0.01" :placeholder="tr('Price (€)', 'Çmimi (€)')" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"/><input v-model.number="newProduct.unitCost" type="number" min="0" step="0.01" :placeholder="tr('Cost per serving (€)', 'Kostoja për porcion (€)')" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"/><label class="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm">{{ tr('Prep time (minutes)', 'Koha (minuta)') }}<input v-model.number="newProduct.prepMinutes" required type="number" min="1" max="240" class="w-20 bg-transparent text-right"/></label><input v-model="newProduct.imageUrl" type="url" :placeholder="tr('Photo URL (optional)', 'Lidhja e fotos (opsionale)')" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 md:col-span-2"/><textarea v-model="newProduct.description" :placeholder="tr('Ingredients and description', 'Përbërësit dhe përshkrimi')" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 md:col-span-2"/><div class="flex gap-2"><select v-model.number="newProduct.categoryId" required class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"><option :value="0" disabled>{{ tr('Choose category', 'Zgjidh kategorinë') }}</option><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select><button class="rounded-lg bg-emerald-400 px-4 py-2 font-semibold text-slate-950">{{ tr('Add dish', 'Shto pjatën') }}</button></div></form>
+        <form @submit.prevent="createCategory" class="mt-3 flex gap-2"><input v-model="newCategory" required :placeholder="tr('New category name', 'Emri i kategorisë së re')" class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"/><button class="rounded-lg border border-slate-700 px-3 py-2 text-sm">{{ tr('Add category', 'Shto kategori') }}</button></form>
+        <p v-if="menuMessage" class="mt-3 text-sm" :class="menuError ? 'text-rose-300' : 'text-emerald-300'">{{ menuMessage }}</p>
+        <div class="mt-5 divide-y divide-slate-800"><div v-for="p in products" :key="p.id" class="grid gap-2 py-4 sm:grid-cols-2 lg:grid-cols-4"><input v-model="edits[p.id].name" :placeholder="tr('Dish name', 'Emri i pjatës')" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"/><input v-model.number="edits[p.id].price" type="number" min="0.01" step="0.01" :placeholder="tr('Price (€)', 'Çmimi (€)')" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"/><input v-model.number="edits[p.id].unitCost" type="number" min="0" step="0.01" :placeholder="tr('Cost (€)', 'Kostoja (€)')" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"/><label class="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-400">{{ tr('Prep min', 'Minuta') }}<input v-model.number="edits[p.id].prepMinutes" type="number" min="1" max="240" class="w-16 bg-transparent text-right text-sm text-white"/></label><select v-model.number="edits[p.id].categoryId" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select><button @click="saveProduct(p.id)" class="rounded-lg border border-emerald-700 px-3 py-2 text-sm text-emerald-300 hover:bg-emerald-950">{{ tr('Save', 'Ruaj') }}</button><input v-model="edits[p.id].imageUrl" type="url" :placeholder="tr('Photo URL', 'Lidhja e fotos')" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 sm:col-span-2 lg:col-span-4"/><textarea v-model="edits[p.id].description" :placeholder="tr('Ingredients and description', 'Përbërësit dhe përshkrimi')" class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 sm:col-span-2 lg:col-span-4"/><p v-if="edits[p.id].unitCost > 0" class="text-xs text-emerald-300">{{ tr('Gross margin per serving', 'Fitimi bruto për porcion') }}: {{ money(edits[p.id].price - edits[p.id].unitCost) }}</p><p v-else class="text-xs text-amber-300">{{ tr('Set unit cost to calculate gross margin.', 'Vendos koston për njësi për të llogaritur fitimin bruto.') }}</p></div></div>
+      </section>
+
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import PreferencesControls from '../components/PreferencesControls.vue'
 import { useRouter } from 'vue-router'
 import { signOut } from '../store/auth'
 import api from '../api/axios'
+import { createDiningTable, diningAreas, diningTables, floorPlanSync, loadFloorPlan, saveFloorPlan, type DiningTable } from '../store/tables'
+import { tr } from '../store/preferences'
 
-interface ProductDto { id: number; name: string; price: number; categoryName: string }
-interface OrderItemDto { productId: number; quantity: number; productName?: string; productPrice?: number }
-interface OrderDto { id: number; tableNumber: number; status: string; items: OrderItemDto[]; createdAt?: string }
-
-const products = ref<ProductDto[]>([])
-const orders = ref<OrderDto[]>([])
+interface ProductDto { id: number; name: string; description: string; imageUrl: string; price: number; unitCost: number; prepMinutes: number; categoryName: string }
+interface CategoryDto { id: number; name: string }
+interface ItemDto { productId: number; quantity: number; productName?: string; productPrice?: number; unitCostAtOrder?: number }
+interface OrderDto { id: number; tableNumber: number; status: string; items: ItemDto[]; createdAt?: string }
+const products = ref<ProductDto[]>([]), categories = ref<CategoryDto[]>([]), orders = ref<OrderDto[]>([])
+const selectedAreaId = ref(diningAreas.value[0]?.id || '')
+watch(diningAreas, areas => { if (!areas.some(area => area.id === selectedAreaId.value)) selectedAreaId.value = areas[0]?.id || '' })
+const newAreaName = ref('')
+const floorCanvas = ref<HTMLElement | null>(null)
+const pointerState = ref<{ tableId: number; pointerId: number; mode: 'move' | 'resize'; startX: number; startY: number; x: number; y: number; width: number; height: number } | null>(null)
+const edits = ref<Record<number, { name: string; description: string; imageUrl: string; price: number; unitCost: number; prepMinutes: number; categoryId: number }>>({})
+const newProduct = ref({ name: '', description: '', imageUrl: '', price: 0, unitCost: 0, prepMinutes: 10, categoryId: 0 })
+const newCategory = ref('')
+const menuMessage = ref(''), menuError = ref(false)
 const router = useRouter()
-
-// Computed properties for analytics
-const pending = computed(() => orders.value.filter(o => o.status === 'Pending').length)
-
-const todaysOrders = computed(() => {
-  const now = new Date()
-  const today = now.toDateString()
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString()
-  
-  const filtered = orders.value.filter(order => {
-    if (!order.createdAt) return false
-    const orderDate = new Date(order.createdAt).toDateString()
-    const isToday = orderDate === today
-    const isYesterday = orderDate === yesterday
-    const isDone = order.status === 'Done'
-    const isRecent = isToday || isYesterday // Include both today and yesterday for demo purposes
-    console.log(`Order ${order.id}: date=${orderDate}, today=${today}, yesterday=${yesterday}, isToday=${isToday}, isYesterday=${isYesterday}, status=${order.status}, isDone=${isDone}`)
-    return isRecent && isDone
-  })
-  console.log('Recent completed orders:', filtered)
-  return filtered
+const selectedScenarioProductId = ref(0), scenarioPrice = ref(0), scenarioCost = ref(0)
+const activeArea = computed(() => diningAreas.value.find(area => area.id === selectedAreaId.value) || diningAreas.value[0])
+const areaTables = computed(() => diningTables.value.filter(table => table.areaId === selectedAreaId.value))
+const completedOrders = computed(() => { const cutoff = Date.now() - 30 * 86400000; return orders.value.filter(o => o.status === 'Done' && (!o.createdAt || new Date(o.createdAt).getTime() >= cutoff)) })
+const rankedDishes = computed(() => {
+  const map = new Map<number, { id: number; name: string; quantity: number; revenue: number; cost: number; costKnown: boolean }>()
+  completedOrders.value.forEach(order => order.items.forEach(item => { const row = map.get(item.productId) || { id: item.productId, name: item.productName || `#${item.productId}`, quantity: 0, revenue: 0, cost: 0, costKnown: true }; row.quantity += item.quantity; row.revenue += (item.productPrice || 0) * item.quantity; if ((item.unitCostAtOrder || 0) > 0) row.cost += item.unitCostAtOrder! * item.quantity; else row.costKnown = false; map.set(item.productId, row) }))
+  return [...map.values()].sort((a, b) => b.quantity - a.quantity)
 })
-
-const todaysSales = computed(() => {
-  return todaysOrders.value.reduce((total, order) => {
-    return total + getOrderTotal(order)
-  }, 0)
-})
-
-const recentOrders = computed(() => {
-  return orders.value
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-    .slice(0, 5)
-})
-
-const bestSellers = computed(() => {
-  const salesMap = new Map<number, { productName: string; totalSales: number; quantity: number }>()
-  
-  todaysOrders.value.forEach(order => {
-    order.items.forEach(item => {
-      const price = item.productPrice || 0
-      const total = price * item.quantity
-      
-      if (salesMap.has(item.productId)) {
-        const existing = salesMap.get(item.productId)!
-        existing.totalSales += total
-        existing.quantity += item.quantity
-      } else {
-        salesMap.set(item.productId, {
-          productName: item.productName || `Product #${item.productId}`,
-          totalSales: total,
-          quantity: item.quantity
-        })
-      }
-    })
-  })
-  
-  return Array.from(salesMap.values())
-    .sort((a, b) => b.totalSales - a.totalSales)
-    .slice(0, 5)
-})
-
-const worstSellers = computed(() => {
-  const salesMap = new Map<number, { productName: string; totalSales: number; quantity: number }>()
-  
-  todaysOrders.value.forEach(order => {
-    order.items.forEach(item => {
-      const price = item.productPrice || 0
-      const total = price * item.quantity
-      
-      if (salesMap.has(item.productId)) {
-        const existing = salesMap.get(item.productId)!
-        existing.totalSales += total
-        existing.quantity += item.quantity
-      } else {
-        salesMap.set(item.productId, {
-          productName: item.productName || `Product #${item.productId}`,
-          totalSales: total,
-          quantity: item.quantity
-        })
-      }
-    })
-  })
-  
-  return Array.from(salesMap.values())
-    .sort((a, b) => a.totalSales - b.totalSales)
-    .slice(0, 5)
-})
-
-async function loadData() {
-  try {
-    const [prodRes, orderRes] = await Promise.all([
-      api.get<ProductDto[]>('/Products'),
-      api.get<OrderDto[]>('/Orders')
-    ])
-    products.value = prodRes.data
-    orders.value = orderRes.data
-  } catch (error) {
-    console.error('Error loading data:', error)
-  }
-}
-
-async function refreshData() {
-  await loadData()
-}
-
-onMounted(async () => {
-  await loadData()
-  
-  // Auto-refresh every 10 seconds to catch order status updates
-  setInterval(async () => {
-    await loadData()
-  }, 10000)
-})
-
-function getOrderTotal(order: OrderDto): number {
-  return order.items.reduce((total, item) => {
-    const price = item.productPrice || 0
-    return total + (price * item.quantity)
-  }, 0)
-}
-
-function statusClass(status: string) {
-  switch (status) {
-    case 'Pending': return 'text-yellow-300'
-    case 'Preparing': return 'text-blue-300'
-    case 'Ready': return 'text-emerald-300'
-    case 'Done': return 'text-green-300'
-    case 'Canceled': return 'text-red-300'
-    default: return 'text-gray-300'
-  }
-}
-
-function logout() {
-  signOut()
-  router.replace({ name: 'Intro' })
-}
+const profitDishes = computed(() => rankedDishes.value.filter(dish => dish.costKnown))
+const maxRevenue = computed(() => Math.max(1, ...profitDishes.value.map(dish => dish.revenue)))
+const scenarioProduct = computed(() => products.value.find(product => product.id === selectedScenarioProductId.value))
+const scenarioUnits = computed(() => rankedDishes.value.find(dish => dish.id === selectedScenarioProductId.value)?.quantity || 0)
+const currentScenarioProfit = computed(() => scenarioUnits.value * ((scenarioProduct.value?.price || 0) - (scenarioProduct.value?.unitCost || 0)))
+const proposedScenarioProfit = computed(() => scenarioUnits.value * (scenarioPrice.value - scenarioCost.value))
+const scenarioChange = computed(() => proposedScenarioProfit.value - currentScenarioProfit.value)
+const scenarioHasBaseline = computed(() => (scenarioProduct.value?.unitCost || 0) > 0)
+const scenarioHasInputs = computed(() => !!scenarioProduct.value && scenarioUnits.value > 0 && scenarioPrice.value > 0 && scenarioCost.value > 0)
+const maxDishQuantity = computed(() => Math.max(1, ...rankedDishes.value.map(d => d.quantity)))
+const menuSignals = computed(() => products.value.map(p => { const found = rankedDishes.value.find(d => d.id === p.id); const quantity = found?.quantity || 0; return { productName: p.name, quantity, message: quantity === 0 ? tr('No sales in this period; review visibility, price, or availability.', 'Pa shitje në këtë periudhë; shqyrto dukshmërinë, çmimin ose disponueshmërinë.') : quantity <= 2 ? tr('Low demand so far; consider testing a menu placement or recipe update.', 'Kërkesë e ulët deri tani; provo vendosjen në menu ose përditësimin e recetës.') : tr('Selling steadily. Keep it available and monitor margin.', 'Shitet rregullisht. Mbaje në menu dhe përcill marzhin.') } }).sort((a, b) => a.quantity - b.quantity).slice(0, 5))
+const recentOrders = computed(() => [...orders.value].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 6))
+const activeTableIds = computed(() => orders.value.filter(o => ['Pending', 'Preparing', 'Ready'].includes(o.status)).map(o => o.tableNumber))
+const metrics = computed(() => [
+  { label: tr('Menu items', 'Artikuj në menu'), value: products.value.length },
+  { label: tr('Total orders', 'Porosi gjithsej'), value: orders.value.length },
+  { label: tr('Sales today', 'Shitjet sot'), value: money(orders.value.filter(o => o.status === 'Done' && o.createdAt && new Date(o.createdAt).toDateString() === new Date().toDateString()).reduce((sum, o) => sum + orderTotal(o), 0)) },
+  { label: tr('Open orders', 'Porosi aktive'), value: orders.value.filter(o => ['Pending', 'Preparing', 'Ready'].includes(o.status)).length }
+])
+function money(value: number) { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(value) }
+function orderTotal(order: OrderDto) { return order.items.reduce((total, item) => total + (item.productPrice || 0) * item.quantity, 0) }
+function tableName(id: number) { return diningTables.value.find(t => t.id === id)?.name || String(id) }
+function tablesInArea(areaId: string) { return diningTables.value.filter(table => table.areaId === areaId) }
+function addArea() { const name = newAreaName.value.trim(); if (!name) return; const id = `area-${Date.now()}`; diningAreas.value.push({ id, name, color: ['#0f766e', '#256d4d', '#6d4b8e', '#8b5e34'][diningAreas.value.length % 4] }); selectedAreaId.value = id; newAreaName.value = '' }
+function removeArea() { const area = activeArea.value; if (!area || diningAreas.value.length < 2 || tablesInArea(area.id).length) return; diningAreas.value = diningAreas.value.filter(candidate => candidate.id !== area.id); selectedAreaId.value = diningAreas.value[0].id }
+function addTable() { const count = areaTables.value.length; diningTables.value.push(createDiningTable(selectedAreaId.value, 3 + (count % 5) * 18, 24 + Math.floor(count / 5) * 112)) }
+function removeTable(id: number) { if (activeTableIds.value.includes(id)) return; diningTables.value = diningTables.value.filter(t => t.id !== id) }
+async function saveLayout() { await saveFloorPlan() }
+function startTablePointer(event: PointerEvent, table: DiningTable, mode: 'move' | 'resize') { const target = event.currentTarget as HTMLElement; target.setPointerCapture(event.pointerId); pointerState.value = { tableId: table.id, pointerId: event.pointerId, mode, startX: event.clientX, startY: event.clientY, x: table.x, y: table.y, width: table.width, height: table.height } }
+function moveTable(event: PointerEvent) { const state = pointerState.value; const table = diningTables.value.find(candidate => candidate.id === state?.tableId); const rect = floorCanvas.value?.getBoundingClientRect(); if (!state || !table || !rect || event.pointerId !== state.pointerId) return; const dx = event.clientX - state.startX, dy = event.clientY - state.startY; if (state.mode === 'move') { const maxX = Math.max(0, 100 - table.width / rect.width * 100); table.x = Math.max(0, Math.min(maxX, state.x + dx / rect.width * 100)); table.y = Math.max(0, Math.min(480 - table.height, state.y + dy)) } else { table.width = Math.round(Math.max(92, Math.min(260, state.width + dx))); table.height = Math.round(Math.max(76, Math.min(190, state.height + dy))); table.x = Math.min(table.x, Math.max(0, 100 - table.width / rect.width * 100)); table.y = Math.min(table.y, 480 - table.height) } }
+function endTablePointer(event: PointerEvent) { if (pointerState.value?.pointerId === event.pointerId) pointerState.value = null }
+async function loadData() { try { const [p, o, c] = await Promise.all([api.get<ProductDto[]>('/Products'), api.get<OrderDto[]>('/Orders'), api.get<CategoryDto[]>('/Categories')]); products.value = p.data; orders.value = o.data; categories.value = c.data; edits.value = Object.fromEntries(p.data.map(item => [item.id, { name: item.name, description: item.description || '', imageUrl: item.imageUrl || '', price: item.price, unitCost: item.unitCost || 0, prepMinutes: item.prepMinutes || 10, categoryId: c.data.find(category => category.name === item.categoryName)?.id || 0 }])); if (!selectedScenarioProductId.value && p.data.length) { selectedScenarioProductId.value = p.data[0].id; loadScenario() } } catch (error) { console.error('Could not load admin data', error) } }
+function loadScenario() { const product = scenarioProduct.value; if (!product) return; scenarioPrice.value = product.price; scenarioCost.value = product.unitCost || 0 }
+async function saveProduct(id: number) { const product = edits.value[id]; if (!product?.categoryId) { menuError.value = true; menuMessage.value = tr('Select a category first.', 'Zgjidh një kategori.'); return } try { await api.put(`/Products/${id}`, product); menuError.value = false; menuMessage.value = tr('Menu item updated.', 'Artikulli u përditësua.'); await loadData() } catch { menuError.value = true; menuMessage.value = tr('Could not save this menu item.', 'Artikulli nuk u ruajt.') } }
+async function createProduct() { if (!newProduct.value.categoryId) return; try { await api.post('/Products', newProduct.value); newProduct.value = { name: '', description: '', imageUrl: '', price: 0, unitCost: 0, prepMinutes: 10, categoryId: 0 }; menuError.value = false; menuMessage.value = tr('Menu item added.', 'Artikulli u shtua.'); await loadData() } catch { menuError.value = true; menuMessage.value = tr('Could not add this menu item.', 'Artikulli nuk u shtua.') } }
+async function createCategory() { const name = newCategory.value.trim(); if (!name) return; try { await api.post('/Categories', { name }); newCategory.value = ''; await loadData(); menuError.value = false; menuMessage.value = tr('Category added.', 'Kategoria u shtua.') } catch { menuError.value = true; menuMessage.value = tr('Could not add category.', 'Kategoria nuk u shtua.') } }
+async function seedMenu() { try { const { data } = await api.post<{ added: number }>('/Products/seed-menu'); menuError.value = false; menuMessage.value = tr(`Added ${data.added} sample dishes.`, `U shtuan ${data.added} pjata shembull.`); await loadData() } catch { menuError.value = true; menuMessage.value = tr('Could not load the sample menu.', 'Nuk u ngarkua menuja shembull.') } }
+onMounted(() => { void loadData(); void loadFloorPlan() })
+function logout() { signOut(); router.replace({ name: 'Intro' }) }
 </script>
-
-<style scoped>
-</style>
-
-

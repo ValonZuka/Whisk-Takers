@@ -3,6 +3,7 @@ using WhiskTakers.Infrastructure;
 using WhiskTakers.Core.Entities;
 using WhiskTakers.Application.DTOs.Categories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WhiskTakers.API.Controllers
 {
@@ -52,6 +53,7 @@ namespace WhiskTakers.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,chef")]
         public async Task<IActionResult> CreateCategory(CategoryCreateDto dto)
         {
             var category = new Category
@@ -72,6 +74,7 @@ namespace WhiskTakers.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin,chef")]
         public async Task<IActionResult> UpdateCategory(int id, CategoryUpdateDto dto)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -84,6 +87,7 @@ namespace WhiskTakers.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin,chef")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var category = await _context.Categories.FindAsync(id);

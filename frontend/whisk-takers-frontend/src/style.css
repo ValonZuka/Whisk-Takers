@@ -3,3 +3,16 @@
 html, body, #app {
   height: 100%;
 }
+
+:root[data-theme="midnight"] body { background: #0b1220; }
+:root[data-theme="terracotta"] body { background: #2b1713; }
+:root[data-theme="midnight"] .bg-emerald-950 { background-color: #101827; }
+:root[data-theme="midnight"] .bg-emerald-900\/60 { background-color: rgb(30 41 59 / 0.82); }
+:root[data-theme="midnight"] .border-emerald-700 { border-color: #475569; }
+:root[data-theme="terracotta"] .bg-emerald-950 { background-color: #2b1713; }
+:root[data-theme="terracotta"] .bg-emerald-900\/60 { background-color: rgb(91 48 34 / 0.78); }
+:root[data-theme="terracotta"] .border-emerald-700 { border-color: #9a5c3d; }
+:root[data-theme="midnight"] main.bg-slate-950 { background-color: #101827; }
+:root[data-theme="midnight"] main .bg-slate-900 { background-color: #1e293b; }
+:root[data-theme="terracotta"] main.bg-slate-950 { background-color: #2b1713; }
+:root[data-theme="terracotta"] main .bg-slate-900 { background-color: #47251c; }

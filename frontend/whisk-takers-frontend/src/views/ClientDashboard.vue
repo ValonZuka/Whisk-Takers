@@ -1,113 +1,34 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-emerald-950 via-emerald-900 to-emerald-950 text-emerald-50">
-    <section class="max-w-7xl mx-auto px-4 py-12">
-      <div class="flex items-center justify-between mb-6">
-        <div class="text-yellow-300 font-bold">Client</div>
-        <button @click="logout" class="rounded bg-yellow-500 text-emerald-950 font-semibold px-3 py-1">Sign out</button>
-      </div>
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-emerald-300">Welcome to Whisk Takers</h1>
-        <p class="mt-3 text-emerald-100">Culinary excellence with a touch of royalty</p>
-      </div>
-
-      <div class="relative overflow-hidden rounded-2xl border border-yellow-500/40 shadow-[0_0_50px_rgba(234,179,8,0.1)] mb-12">
-        <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-yellow-500/10 animate-pulse"></div>
-        <img src="/placeholder.svg" alt="Hero" class="w-full h-64 object-cover opacity-70" />
-        <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <h2 class="text-3xl md:text-5xl font-bold text-yellow-300 drop-shadow">A Royal Feast Awaits</h2>
-          <p class="mt-2 text-emerald-50">Explore our curated dishes below</p>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-2xl font-semibold text-yellow-300">Menu</h3>
-        <div class="flex items-center gap-3">
-          <select v-model="filter" class="rounded bg-emerald-950 border border-emerald-700 px-3 py-2 text-emerald-100">
-            <option value="all">All</option>
-            <option value="Starters">Appetisers</option>
-            <option value="Mains">Main Course</option>
-            <option value="Desserts">Desserts</option>
-          </select>
-          <RouterLink to="/about" class="text-yellow-300 hover:text-yellow-200 underline">About Us</RouterLink>
-        </div>
-      </div>
-
-      <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="p in fullMenu" :key="p.id" class="rounded-xl bg-emerald-950/70 border border-yellow-500/30 hover:border-yellow-400/50 transition shadow-[0_0_30px_rgba(16,185,129,0.1)] overflow-hidden">
-          <img :src="p.image || '/public/placeholder.svg'" alt="Dish image" class="w-full h-40 object-cover opacity-90" />
-          <div class="p-5">
-            <div class="flex items-center justify-between">
-              <h4 class="text-xl font-bold text-yellow-200">{{ p.name }}</h4>
-              <span class="text-sm px-2 py-1 rounded-full border border-yellow-500/40 text-yellow-200" v-if="p.badge">{{ p.badge }}</span>
-            </div>
-            <p class="mt-1 text-emerald-200">{{ p.categoryName }}</p>
-            <p class="mt-3 text-yellow-300 font-semibold">$ {{ p.price.toFixed(2) }}</p>
-            <p class="mt-3 text-emerald-100">{{ p.description || lorem }}</p>
-          </div>
-        </div>
-      </div>
+  <main class="min-h-screen bg-gradient-to-b from-emerald-950 via-emerald-900 to-emerald-950 text-emerald-50">
+    <section class="mx-auto max-w-7xl px-4 py-12">
+      <header class="mb-10 flex flex-wrap items-center justify-between gap-3"><div class="font-bold text-yellow-300">Whisk Takers</div><div class="flex flex-wrap items-center gap-3"><PreferencesControls /><a href="#about-us" class="rounded border border-yellow-500/50 px-3 py-2 text-sm font-semibold text-yellow-200">{{ tr('Who we are', 'Kush jemi') }}</a></div></header>
+      <div class="mb-10 grid overflow-hidden rounded-2xl border border-yellow-500/30 bg-emerald-950/60 md:grid-cols-2"><img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1200&q=85" alt="Coffee prepared at Whisk Takers" class="h-64 w-full object-cover md:h-full"/><div class="flex flex-col justify-center p-7 text-center md:p-10"><h1 class="text-4xl font-extrabold text-emerald-300">{{ tr('Welcome to Whisk Takers', 'Mirë se vini te Whisk Takers') }}</h1><p class="mt-3 text-emerald-100">{{ tr('Freshly prepared, made with care.', 'Të përgatitura të freskëta dhe me kujdes.') }}</p></div></div>
+      <div class="mb-10 rounded-2xl border border-yellow-500/30 bg-emerald-950/60 p-8 text-center"><h2 class="text-3xl font-bold text-yellow-300">{{ tr('Our menu', 'Menuja jonë') }}</h2><p class="mt-2 text-emerald-200">{{ tr('Explore our dishes, drinks, and bakery specials.', 'Zbuloni pjatat, pijet dhe specialitetet e furrës.') }}</p></div>
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h3 class="text-2xl font-semibold text-yellow-300">{{ tr('Menu', 'Menuja') }}</h3><div class="flex gap-3"><select v-model="filter" class="rounded border border-emerald-700 bg-emerald-950 px-3 py-2 text-emerald-100"><option value="all">{{ tr('All categories', 'Të gjitha kategoritë') }}</option><option v-for="category in categories" :key="category" :value="category">{{ category }}</option></select><RouterLink to="/about" class="self-center text-yellow-300 underline">{{ tr('About us', 'Rreth nesh') }}</RouterLink></div></div>
+      <div v-if="loading" class="py-10 text-center text-emerald-200">{{ tr('Loading menu…', 'Duke ngarkuar menunë…') }}</div>
+      <div v-else-if="!fullMenu.length" class="rounded-xl border border-emerald-700 p-8 text-center text-emerald-200">{{ tr('The menu is being prepared. Please check back soon.', 'Menuja po përgatitet. Ju lutemi kthehuni së shpejti.') }}</div>
+      <div v-else class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"><article v-for="product in fullMenu" :key="product.id" class="overflow-hidden rounded-xl border border-yellow-500/30 bg-emerald-950/70"><img :src="product.imageUrl || fallbackPhoto(product.id, product.categoryName)" :alt="product.name" class="h-48 w-full object-cover" loading="lazy"/><div class="p-5"><div class="flex items-start justify-between gap-3"><h4 class="text-lg font-bold text-yellow-200">{{ product.name }}</h4><span class="shrink-0 font-semibold text-yellow-300">€ {{ product.price.toFixed(2) }}</span></div><p class="mt-2 text-sm text-emerald-300">{{ product.categoryName }}</p><p v-if="product.description" class="mt-3 text-sm leading-6 text-emerald-100">{{ product.description }}</p></div></article></div>
+      <section id="about-us" class="mt-12 grid overflow-hidden rounded-2xl border border-emerald-700 bg-emerald-950/70 md:grid-cols-2"><div class="p-7 md:p-9"><p class="text-sm font-semibold uppercase tracking-widest text-yellow-300">{{ tr('Who we are', 'Kush jemi') }}</p><h2 class="mt-2 text-2xl font-bold text-emerald-100">{{ tr('A neighborhood café, made with care', 'Kafeneja e lagjes, e përgatitur me kujdes') }}</h2><p class="mt-4 leading-7 text-emerald-200">{{ tr('Whisk Takers brings together carefully prepared coffee, fresh bakery favorites, and desserts made for sharing. We care about good ingredients, a warm welcome, and making every visit feel easy.', 'Whisk Takers bashkon kafenë e përgatitur me kujdes, produktet e freskëta të furrës dhe ëmbëlsirat për t’u ndarë me të tjerët. Na interesojnë përbërësit cilësorë, mikpritja dhe një përvojë e këndshme në çdo vizitë.') }}</p></div><img src="https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=85" alt="Warm café interior" class="h-64 w-full object-cover md:h-full" loading="lazy"/></section>
+      <p v-if="error" class="mt-5 text-center text-rose-300">{{ error }}</p>
     </section>
-  </div>
-  
+  </main>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import PreferencesControls from '../components/PreferencesControls.vue'
 import { RouterLink } from 'vue-router'
-import { useRouter } from 'vue-router'
 import api from '../api/axios'
-import { signOut } from '../store/auth'
-interface ProductDto {
-  id: number
-  name: string
-  price: number
-  categoryName: string
-  image?: string
-  description?: string
+import { tr } from '../store/preferences'
+interface ProductDto { id: number; name: string; description?: string; imageUrl?: string; price: number; categoryName: string }
+const products = ref<ProductDto[]>([]), loading = ref(true), error = ref(''), filter = ref('all')
+const menuPhotos = {
+  dessert: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=80'],
+  drinks: ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=900&q=80'],
+  bakery: ['https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=900&q=80']
 }
-
-const products = ref<ProductDto[]>([])
-const router = useRouter()
-
-// Signature curated dishes to enrich the menu visually
-const signatureDishes = ref<Array<ProductDto & { description: string; badge?: string }>>([
-  { id: 1001, name: 'Emerald Herb Risotto', price: 19.5, categoryName: 'Mains', description: lorem, badge: 'Signature', image: '/public/placeholder.svg' },
-  { id: 1002, name: 'Golden Truffle Pasta', price: 24, categoryName: 'Mains', description: lorem, badge: 'Chef\'s Pick', image: '/public/placeholder.svg' },
-  { id: 1003, name: 'Royal Garden Salad', price: 12, categoryName: 'Starters', description: lorem, image: '/public/placeholder.svg' },
-  { id: 1004, name: 'Saffron Seafood Paella', price: 28, categoryName: 'Mains', description: lorem, image: '/public/placeholder.svg' },
-  { id: 1005, name: 'Matcha Cheesecake', price: 9.5, categoryName: 'Desserts', description: lorem, image: '/public/placeholder.svg' },
-  { id: 1006, name: 'Citrus Herb Chicken', price: 17, categoryName: 'Mains', description: lorem, image: '/public/placeholder.svg' },
-  { id: 1007, name: 'Velvet Mushroom Soup', price: 10, categoryName: 'Starters', description: lorem, image: '/public/placeholder.svg' },
-  { id: 1008, name: 'Caramelized Pear Tart', price: 8.5, categoryName: 'Desserts', description: lorem, image: '/public/placeholder.svg' },
-])
-
-const filter = ref<'all' | 'Starters' | 'Mains' | 'Desserts'>('all')
-
-const fullMenu = computed(() => {
-  // Merge API products with curated ones (avoid ID collisions by keeping custom IDs high)
-  const merged = [...signatureDishes.value, ...products.value.map(p => ({ ...p, description: lorem, image: '/public/placeholder.svg' }))]
-  if (filter.value === 'all') return merged
-  return merged.filter(p => p.categoryName === filter.value)
-})
-
-const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam ut sapien non metus posuere tempus.'
-
-function logout() {
-  signOut()
-  router.replace({ name: 'Intro' })
-}
-
-onMounted(async () => {
-  const { data } = await api.get<ProductDto[]>('/Products')
-  products.value = data
-})
-
-function getDescription(p: ProductDto): string {
-  return `A delightful ${p.categoryName.toLowerCase()} crafted by our master chefs.`
-}
+const categories = computed(() => [...new Set(products.value.map(product => product.categoryName).filter(Boolean))])
+const fullMenu = computed(() => filter.value === 'all' ? products.value : products.value.filter(product => product.categoryName === filter.value))
+function fallbackPhoto(id: number, category: string) { const key = category.toLowerCase(); const group = key.includes('drink') ? menuPhotos.drinks : key.includes('bakery') ? menuPhotos.bakery : key.includes('dessert') ? menuPhotos.dessert : menuPhotos.bakery; return group[id % group.length] }
+onMounted(async () => { try { const { data } = await api.get<ProductDto[]>('/Products'); products.value = data } catch { error.value = tr('Could not load the menu. Please try again later.', 'Menuja nuk u ngarkua. Provoni përsëri më vonë.') } finally { loading.value = false } })
 </script>
-
-<style scoped>
-</style>
-
-

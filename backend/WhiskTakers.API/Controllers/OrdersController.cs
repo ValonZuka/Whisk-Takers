@@ -33,13 +33,17 @@ namespace WhiskTakers.API.Controllers
                 TableNumber = o.TableNumber,
                 Status = o.Status,
                 CreatedAt = o.CreatedAt,
+                PreparationStartedAtUtc = o.PreparationStartedAtUtc,
+                TimerExtensionMinutes = o.TimerExtensionMinutes,
                 WaiterName = o.WaiterName ?? "Unknown",
                 WaiterEmail = o.WaiterEmail ?? "",
                 Items = o.Items.Select(i => new OrderItemResponseDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product?.Name ?? "",
-                    ProductPrice = i.Product?.Price ?? 0,
+                    ProductPrice = i.UnitPriceAtOrder > 0 ? i.UnitPriceAtOrder : i.Product?.Price ?? 0,
+                    UnitCostAtOrder = i.UnitCostAtOrder,
+                    PrepMinutes = i.PrepMinutesAtOrder,
                     Quantity = i.Quantity
                 }).ToList()
             });
@@ -63,13 +67,17 @@ namespace WhiskTakers.API.Controllers
                 TableNumber = order.TableNumber,
                 Status = order.Status,
                 CreatedAt = order.CreatedAt,
+                PreparationStartedAtUtc = order.PreparationStartedAtUtc,
+                TimerExtensionMinutes = order.TimerExtensionMinutes,
                 WaiterName = order.WaiterName ?? "Unknown",
                 WaiterEmail = order.WaiterEmail ?? "",
                 Items = order.Items.Select(i => new OrderItemResponseDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product?.Name ?? "",
-                    ProductPrice = i.Product?.Price ?? 0,
+                    ProductPrice = i.UnitPriceAtOrder > 0 ? i.UnitPriceAtOrder : i.Product?.Price ?? 0,
+                    UnitCostAtOrder = i.UnitCostAtOrder,
+                    PrepMinutes = i.PrepMinutesAtOrder,
                     Quantity = i.Quantity
                 }).ToList()
             };
@@ -87,6 +95,11 @@ namespace WhiskTakers.API.Controllers
             var waiterName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             var waiterEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 
+            if (dto.Items.Any(item => item.Quantity < 1)) return BadRequest("Item quantities must be at least one.");
+            var productIds = dto.Items.Select(item => item.ProductId).Distinct().ToArray();
+            var products = await _context.Products.Where(product => productIds.Contains(product.Id)).ToDictionaryAsync(product => product.Id);
+            if (productIds.Any(productId => !products.ContainsKey(productId))) return BadRequest("One or more products do not exist.");
+
             
             var order = new Order
             {
@@ -96,7 +109,10 @@ namespace WhiskTakers.API.Controllers
                 Items = dto.Items.Select(i => new OrderItem
                 {
                     ProductId = i.ProductId,
-                    Quantity = i.Quantity
+                    Quantity = i.Quantity,
+                    UnitCostAtOrder = products[i.ProductId].UnitCost,
+                    UnitPriceAtOrder = products[i.ProductId].Price,
+                    PrepMinutesAtOrder = products[i.ProductId].PrepMinutes
                 }).ToList()
             };
 
@@ -109,13 +125,17 @@ namespace WhiskTakers.API.Controllers
                 TableNumber = order.TableNumber,
                 Status = order.Status,
                 CreatedAt = order.CreatedAt,
+                PreparationStartedAtUtc = order.PreparationStartedAtUtc,
+                TimerExtensionMinutes = order.TimerExtensionMinutes,
                 WaiterName = waiterName ?? "Unknown",  // Use the extracted waiter name from JWT
                 WaiterEmail = waiterEmail ?? "",  // Use the extracted waiter email from JWT
                 Items = order.Items.Select(i => new OrderItemResponseDto
                 {
                     ProductId = i.ProductId,
                     ProductName = _context.Products.FirstOrDefault(p => p.Id == i.ProductId)?.Name ?? "",
-                    ProductPrice = _context.Products.FirstOrDefault(p => p.Id == i.ProductId)?.Price ?? 0,
+                    ProductPrice = i.UnitPriceAtOrder,
+                    UnitCostAtOrder = i.UnitCostAtOrder,
+                    PrepMinutes = i.PrepMinutesAtOrder,
                     Quantity = i.Quantity
                 }).ToList()
             };
@@ -126,18 +146,27 @@ namespace WhiskTakers.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOrder(int id, OrderCreateDto dto)
         {
+            if (dto.Items == null || dto.Items.Count == 0 || dto.Items.Any(item => item.Quantity < 1))
+                return BadRequest("Order must contain valid items.");
             var order = await _context.Orders
                 .Include(o => o.Items)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null) return NotFound();
 
+            var productIds = dto.Items.Select(item => item.ProductId).Distinct().ToArray();
+            var products = await _context.Products.Where(product => productIds.Contains(product.Id)).ToDictionaryAsync(product => product.Id);
+            if (productIds.Any(productId => !products.ContainsKey(productId))) return BadRequest("One or more products do not exist.");
+
             order.TableNumber = dto.TableNumber;
 
             order.Items = dto.Items.Select(i => new OrderItem
             {
                 ProductId = i.ProductId,
-                Quantity = i.Quantity
+                Quantity = i.Quantity,
+                UnitCostAtOrder = products[i.ProductId].UnitCost,
+                UnitPriceAtOrder = products[i.ProductId].Price,
+                PrepMinutesAtOrder = products[i.ProductId].PrepMinutes
             }).ToList();
 
             await _context.SaveChangesAsync();
@@ -156,9 +185,29 @@ namespace WhiskTakers.API.Controllers
                 return BadRequest("Invalid status");
 
             order.Status = request.Status;
+            if (request.Status == "Preparing")
+            {
+                order.PreparationStartedAtUtc = DateTime.UtcNow;
+                order.TimerExtensionMinutes = 0;
+            }
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Status updated successfully" });
+            return Ok(new { preparationStartedAtUtc = order.PreparationStartedAtUtc, timerExtensionMinutes = order.TimerExtensionMinutes });
+        }
+
+        [HttpPost("{id}/timer-extension")]
+        [Authorize(Roles = "chef,admin")]
+        public async Task<IActionResult> ExtendPreparationTimer(int id, [FromBody] TimerExtensionRequest request)
+        {
+            if (request.Minutes is not 5 and not 10) return BadRequest("Only 5 or 10 minute extensions are supported.");
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound();
+            if (order.Status != "Preparing" || order.PreparationStartedAtUtc == null)
+                return Conflict("Start the preparation timer before extending it.");
+
+            order.TimerExtensionMinutes += request.Minutes;
+            await _context.SaveChangesAsync();
+            return Ok(new { timerExtensionMinutes = order.TimerExtensionMinutes });
         }
 
         [HttpDelete("{id}")]
@@ -183,5 +232,10 @@ namespace WhiskTakers.API.Controllers
     public class UpdateStatusRequest
     {
         public string Status { get; set; } = string.Empty;
+    }
+
+    public class TimerExtensionRequest
+    {
+        public int Minutes { get; set; }
     }
 }

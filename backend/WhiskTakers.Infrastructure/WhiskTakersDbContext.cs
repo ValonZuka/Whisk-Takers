@@ -16,12 +16,14 @@ namespace WhiskTakers.Infrastructure
 
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
-        public DbSet<Fabrika> Fabrika { get; set; }
-        public DbSet<Puntori> Puntori { get; set; }
-    
+        public DbSet<FloorPlanSettings> FloorPlanSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<FloorPlanSettings>()
+                .Property(plan => plan.Id)
+                .ValueGeneratedNever();
+
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.Items)
@@ -34,17 +36,6 @@ namespace WhiskTakers.Infrastructure
                 .HasForeignKey(oi => oi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict); 
 
-                
-            modelBuilder.Entity<Fabrika>()
-                .HasMany(f => f.Puntori)
-                .WithOne(p => p.Fabrika)
-                .HasForeignKey(p => p.FabrikaId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Puntori>()
-                .HasOne(p => p.Fabrika)
-                .WithMany(f => f.Puntori)
-                .HasForeignKey(p => p.FabrikaId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -1,188 +1,157 @@
 <template>
-  <div class="min-h-screen bg-emerald-950 text-emerald-50">
-    <div class="max-w-7xl mx-auto px-4 py-10">
-      <div class="flex items-center justify-between mb-6">
-        <div class="text-yellow-300 font-bold">Waiter</div>
-        <button @click="logout" class="rounded bg-yellow-500 text-emerald-950 font-semibold px-3 py-1">Sign out</button>
+  <main class="min-h-screen overflow-x-hidden bg-emerald-950 text-emerald-50">
+    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-800 px-4 py-3 sm:px-6">
+      <div><p class="text-xs uppercase tracking-widest text-emerald-300">Whisk Takers</p><h1 class="text-xl font-bold text-yellow-300">{{ tr('Floor & tables', 'Salla dhe tavolinat') }}</h1></div>
+      <div class="flex flex-wrap items-center gap-3"><PreferencesControls /><span class="hidden text-sm text-emerald-300 sm:inline">{{ currentUser?.name }}</span><button @click="logout" class="rounded-lg bg-yellow-500 px-3 py-2 text-sm font-semibold text-emerald-950">{{ tr('Sign out', 'Dil') }}</button></div>
+    </header>
+    <section class="px-3 py-3 sm:px-6">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-lg font-semibold">{{ selectedArea?.name || tr('Restaurant', 'Restoranti') }}</h2><p class="text-xs text-emerald-300">{{ tr('Choose a table to start an order.', 'Zgjidh tavolinën për të nisur porosinë.') }} <span v-if="floorPlanSync === 'error'" class="text-rose-300">{{ tr('Layout sync error', 'Gabim në sinkronizimin e planit') }}</span></p></div><div class="flex flex-wrap gap-2"><button v-for="area in diningAreas" :key="area.id" @click="selectedAreaId = area.id" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="selectedAreaId === area.id ? 'border-yellow-300 bg-yellow-400 text-emerald-950' : 'border-emerald-700 bg-emerald-900/60 text-emerald-100'"><span class="mr-2 inline-block h-2.5 w-2.5 rounded-full" :style="{backgroundColor:area.color}"></span>{{ area.name }}</button></div></div>
+      <div class="relative h-[clamp(480px,calc(100dvh-165px),780px)] overflow-hidden rounded-2xl border" :style="{ borderColor: selectedArea?.color, backgroundColor: `${selectedArea?.color || '#0f766e'}20`, backgroundImage: 'radial-gradient(#ffffff30 1px, transparent 1px)', backgroundSize: '24px 24px' }">
+        <button v-for="table in areaTables" :key="table.id" @click="selectTable(table.id)" class="absolute flex flex-col items-center justify-center rounded-2xl border-2 px-2 text-center shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300" :class="tableId === table.id ? 'border-yellow-200 bg-yellow-400 text-emerald-950' : isBusy(table.id) ? 'border-amber-300 bg-emerald-900 text-amber-100' : 'border-white/50 text-white'" :style="{ left: `${table.x}%`, top: `${table.y}px`, width: `${table.width}px`, height: `${table.height}px`, backgroundColor: tableId === table.id ? undefined : isBusy(table.id) ? '#064e3b' : selectedArea?.color, zIndex: 2 }">
+          <span class="font-bold">{{ table.name }}</span><span class="mt-1 text-xs opacity-80">{{ table.seats }} {{ tr('seats', 'vende') }}</span><span class="mt-1 text-[10px] opacity-70">{{ isBusy(table.id) ? tr('In use', 'Në përdorim') : tr('Available', 'E lirë') }}</span>
+        </button>
+        <p v-if="!areaTables.length" class="p-6 text-sm text-emerald-200">{{ tr('No tables in this area yet.', 'Nuk ka tavolina në këtë hapësirë.') }}</p>
       </div>
-      <h1 class="text-3xl font-bold text-yellow-300 mb-6">Waiter Dashboard</h1>
+    </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="md:col-span-2">
-          <h2 class="text-2xl font-semibold mb-4">Products ({{ products.length }} available)</h2>
-          <div v-if="!tableId" class="rounded-lg border border-yellow-500/30 p-6 bg-emerald-900/60 text-emerald-100">
-            Please select a table first.
-          </div>
-          <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2">
-            <div v-if="products.length === 0" class="col-span-2 text-center text-emerald-200">
-              No products available. Loading...
-            </div>
-            <div v-for="p in products" :key="p.id" class="rounded-lg border border-yellow-500/30 bg-emerald-900/60 overflow-hidden">
-              <div class="relative">
-                <img src="/public/placeholder.svg" class="w-full h-28 object-cover opacity-90" />
-              </div>
-              <div class="p-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="font-bold text-yellow-200">{{ p.name }}</p>
-                    <p class="text-sm text-emerald-200">{{ p.categoryName }}</p>
-                  </div>
-                  <p class="text-yellow-300 font-semibold">$ {{ p.price.toFixed(2) }}</p>
-                </div>
-                <p class="text-sm mt-2 text-emerald-200">{{ p.description }}</p>
-                <div class="mt-3 flex items-center gap-2">
-                  <input type="number" min="1" v-model.number="quantities[p.id]" class="w-20 rounded bg-emerald-950 border border-emerald-700 px-2 py-1" />
-                  <button @click="addItem(p)" class="px-3 py-1 rounded bg-yellow-500 text-emerald-900 font-semibold">Add</button>
-                </div>
-              </div>
-            </div>
-          </div>
+    <section class="px-3 pb-8 sm:px-6">
+      <div class="rounded-2xl border border-emerald-800 bg-emerald-900/50 p-4 shadow-lg sm:p-6">
+        <div class="mb-5">
+          <h2 class="text-xl font-bold text-yellow-200">{{ tr('My orders', 'Porositë e mia') }}</h2>
+          <p class="mt-1 text-sm text-emerald-200">{{ tr('Your order history and today’s completed sales.', 'Historiku i porosive dhe shitjet e përfunduara sot.') }}</p>
         </div>
-
-        <div>
-          <h2 class="text-2xl font-semibold mb-4">Create Order</h2>
-          <div class="rounded-lg border border-yellow-500/30 p-4 bg-emerald-900/60">
-            <label class="block text-sm mb-2">Select a Table</label>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-              <button
-                v-for="n in tables"
-                :key="n"
-                @click="selectTable(n)"
-                :class="[
-                  'relative h-20 rounded-xl border text-center font-bold',
-                  tableId === n ? 'bg-yellow-400 text-emerald-950 border-yellow-300' : (isBusy(n) ? 'bg-emerald-900/60 border-yellow-500/50 text-yellow-300' : 'bg-emerald-950/70 border-emerald-700 text-yellow-200')
-                ]"
-              >
-                <span class="absolute inset-0 flex items-center justify-center text-2xl">{{ n }}</span>
-                <span class="sr-only">Table {{ n }}</span>
-              </button>
+        <div class="mb-6 grid gap-3 sm:grid-cols-3">
+          <article class="rounded-xl border border-emerald-700 bg-emerald-950/80 p-4">
+            <p class="text-sm text-emerald-300">{{ tr('Orders today', 'Porosi sot') }}</p>
+            <p class="mt-2 text-2xl font-bold text-white">{{ todayOrders.length }}</p>
+          </article>
+          <article class="rounded-xl border border-emerald-700 bg-emerald-950/80 p-4">
+            <p class="text-sm text-emerald-300">{{ tr('Completed today', 'Të përfunduara sot') }}</p>
+            <p class="mt-2 text-2xl font-bold text-white">{{ todayCompletedOrders.length }}</p>
+          </article>
+          <article class="rounded-xl border border-yellow-500/40 bg-emerald-950/80 p-4">
+            <p class="text-sm text-emerald-300">{{ tr('Sales realized today', 'Shitjet e realizuara sot') }}</p>
+            <p class="mt-2 text-2xl font-bold text-yellow-200">{{ money(todaySales) }}</p>
+          </article>
+        </div>
+        <div v-if="myOrders.length" class="space-y-3">
+          <article v-for="order in myOrders" :key="order.id" class="rounded-xl border border-emerald-800 bg-emerald-950/70 p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-white">{{ tr('Order', 'Porosia') }} #{{ order.id }} · {{ tableName(order.tableNumber) }}</h3>
+                <p class="mt-1 text-xs text-emerald-300">{{ formatOrderDate(order.createdAt) }}</p>
+              </div>
+              <span class="rounded-full border px-3 py-1 text-sm font-semibold" :class="orderStatusClass(order.status)">{{ orderStatusLabel(order.status) }}</span>
             </div>
-
-            <h3 class="mt-4 font-semibold">Items</h3>
-            <ul class="mt-2 space-y-1">
-              <li v-for="item in orderItems" :key="item.productId" class="flex justify-between text-sm">
-                <span>{{ getProductName(item.productId) }}</span>
-                <span>x{{ item.quantity }}</span>
-              </li>
+            <ul class="mt-3 space-y-1 text-sm text-emerald-100">
+              <li v-for="item in order.items" :key="item.productId">{{ item.productName || `#${item.productId}` }} × {{ item.quantity }}</li>
             </ul>
-
-            <button @click="submitOrder" :disabled="!orderItems.length || !tableId" class="mt-4 w-full px-4 py-2 rounded bg-yellow-500 disabled:opacity-50 text-emerald-900 font-bold shadow-[0_0_20px_rgba(234,179,8,0.35)]">Submit Order</button>
-          </div>
-
-          <h2 class="text-2xl font-semibold mt-8 mb-4">Recent Orders</h2>
-          <div class="space-y-3">
-            <div v-for="o in orders" :key="o.id" class="rounded border border-yellow-500/30 p-3 bg-emerald-900/60">
-              <div class="flex justify-between">
-                <p>Table {{ o.tableNumber }}</p>
-                <p class="font-semibold" :class="statusClass(o.status)">{{ o.status }}</p>
-              </div>
-              <ul class="mt-2 text-sm">
-                <li v-for="i in o.items" :key="i.productId">{{ i.productName }} x{{ i.quantity }}</li>
-              </ul>
-              <p class="text-xs text-emerald-200 mt-1">Waiter: {{ o.waiterName || 'Unknown' }}</p>
-            </div>
-          </div>
+            <p class="mt-3 border-t border-emerald-800 pt-3 text-right font-semibold text-yellow-200">{{ money(orderGrandTotal(order)) }}</p>
+          </article>
         </div>
+        <p v-else class="rounded-xl border border-dashed border-emerald-700 p-6 text-center text-sm text-emerald-300">{{ tr('Your orders will appear here after you send your first order.', 'Porositë e tua do të shfaqen këtu pasi të dërgosh porosinë e parë.') }}</p>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <div v-if="tableId !== null" class="fixed inset-0 z-40 bg-black/50" @click.self="closeOrder"></div>
+    <aside class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l border-emerald-700 bg-emerald-950 shadow-2xl transition-transform duration-300" :class="tableId === null ? 'translate-x-full' : 'translate-x-0'" :aria-hidden="tableId === null" :inert="tableId === null">
+      <header class="flex items-center justify-between border-b border-emerald-800 px-5 py-4"><div><p class="text-xs text-emerald-300">{{ selectedArea?.name }}</p><h2 class="text-xl font-bold text-yellow-200">{{ selectedTable?.name }}</h2></div><button @click="closeOrder" class="rounded-full border border-emerald-700 px-3 py-1 text-xl leading-7 hover:bg-emerald-900" :aria-label="tr('Close order panel', 'Mbyll panelin e porosisë')">×</button></header>
+      <div class="flex-1 overflow-y-auto p-4">
+        <div class="mb-3 flex items-center justify-between"><h3 class="font-semibold">{{ tr('Menu', 'Menuja') }}</h3><span class="text-xs text-emerald-300">{{ visibleProducts.length }} {{ tr('items', 'artikuj') }}</span></div>
+        <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" :aria-label="tr('Filter menu by category', 'Filtro menunë sipas kategorisë')">
+          <button v-for="filter in menuFilters" :key="filter.value" type="button" class="flex min-h-12 items-center justify-center gap-2 rounded-xl border px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300" :class="menuFilter === filter.value ? 'border-yellow-300 bg-yellow-400 text-emerald-950' : 'border-emerald-700 bg-emerald-900/60 text-emerald-100 hover:border-yellow-400'" :aria-pressed="menuFilter === filter.value" @click="menuFilter = filter.value">
+            <component :is="filter.icon" class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{{ filter.label }}</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button v-for="p in visibleProducts" :key="p.id" @click="addItem(p)" class="flex min-h-20 items-center gap-3 rounded-xl border border-emerald-800 bg-emerald-900/60 p-3 text-left hover:border-yellow-400"><img :src="photoFor(p.id)" alt="" class="h-14 w-14 rounded-lg object-cover"/><span class="min-w-0 flex-1"><strong class="block truncate text-sm text-yellow-100">{{ p.name }}</strong><small class="block truncate text-emerald-300">{{ p.categoryName }}</small></span><b class="text-sm">€{{ p.price.toFixed(2) }}</b></button>
+        </div>
+        <p v-if="!visibleProducts.length" class="py-8 text-center text-sm text-emerald-300">{{ products.length ? tr('No items in this menu filter.', 'Nuk ka artikuj në këtë filtër.') : tr('Menu is loading or empty.', 'Menuja po ngarkohet ose është bosh.') }}</p>
+        <section class="mt-6 border-t border-emerald-800 pt-4"><div class="flex items-center justify-between"><h3 class="font-semibold">{{ tr('Order', 'Porosia') }}</h3><span class="text-sm text-emerald-300">{{ orderItems.length }} {{ tr('lines', 'rreshta') }}</span></div>
+          <ul v-if="orderItems.length" class="mt-3 space-y-3"><li v-for="item in orderItems" :key="item.productId" class="flex items-center justify-between gap-3 rounded-lg bg-emerald-900/70 p-3"><div class="min-w-0"><p class="truncate font-medium">{{ getProductName(item.productId) }}</p><p class="text-xs text-emerald-300">€{{ (getProductPrice(item.productId) * item.quantity).toFixed(2) }}</p></div><div class="flex items-center gap-2"><button @click="changeQuantity(item.productId, -1)" class="h-8 w-8 rounded bg-emerald-950 text-lg" :aria-label="tr('Remove one', 'Hiq një')">−</button><span class="w-5 text-center">{{ item.quantity }}</span><button @click="changeQuantity(item.productId, 1)" class="h-8 w-8 rounded bg-emerald-950 text-lg" :aria-label="tr('Add one', 'Shto një')">＋</button></div></li></ul>
+          <p v-else class="mt-3 rounded-lg border border-dashed border-emerald-700 p-4 text-sm text-emerald-300">{{ tr('Tap a dish to add one portion.', 'Prek pjatën për të shtuar një porcion.') }}</p>
+          <div v-if="orderItems.length" class="mt-4 flex justify-between border-t border-emerald-800 pt-3 font-bold"><span>{{ tr('Total', 'Totali') }}</span><span>€{{ orderTotal.toFixed(2) }}</span></div>
+          <p v-if="orderError" class="mt-3 text-sm text-rose-300">{{ orderError }}</p><button @click="submitOrder" :disabled="!orderItems.length || submitting" class="mt-4 w-full rounded-xl bg-yellow-400 px-4 py-3 font-bold text-emerald-950 disabled:opacity-50">{{ submitting ? tr('Sending…', 'Duke dërguar…') : tr('Send order to kitchen', 'Dërgo porosinë në kuzhinë') }}</button>
+        </section>
+      </div>
+    </aside>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { CakeSlice, Coffee, Croissant, LayoutGrid, Soup, UtensilsCrossed } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { signOut, getCurrentUser } from '../store/auth'
 import api from '../api/axios'
-interface ProductDto { id: number; name: string; price: number; categoryName: string }
+import { diningAreas, diningTables, floorPlanSync, loadFloorPlan } from '../store/tables'
+import { tr } from '../store/preferences'
+import PreferencesControls from '../components/PreferencesControls.vue'
+interface ProductDto { id: number; name: string; description?: string; price: number; categoryName: string; imageUrl?: string }
 interface OrderItemDto { productId: number; quantity: number; productName?: string; productPrice?: number }
-interface OrderDto { id: number; tableNumber: number; status: string; items: OrderItemDto[]; waiterName?: string; waiterEmail?: string }
-
-const apiProducts = ref<ProductDto[]>([])
-const orders = ref<OrderDto[]>([])
-const quantities = reactive<Record<number, number>>({})
-const orderItems = ref<OrderItemDto[]>([])
-const tableId = ref<number | null>(null)
-const tables = Array.from({ length: 12 }, (_, i) => i + 1)
-const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.'
-const busyTables = ref<Set<number>>(new Set())
-const currentUser = getCurrentUser()
-const waiterEmail = currentUser?.email || ''
-const router = useRouter()
-
-    // Only use real database products for waiter (no signature dishes)
-    const products = computed(() => {
-      return apiProducts.value.map(p => ({ ...p, description: lorem, image: '/public/placeholder.svg' }))
-    })
-function selectTable(n: number) {
-  if (!canEditTable(n)) {
-    alert('This table is being managed by another waiter')
-    return
-  }
-  tableId.value = n
-  console.log('Selected table:', n, 'Products available:', products.value.length)
+interface OrderDto { id: number; tableNumber: number; status: string; createdAt: string; items: OrderItemDto[]; waiterName?: string; waiterEmail?: string }
+const apiProducts = ref<ProductDto[]>([]), orders = ref<OrderDto[]>([]), orderItems = ref<OrderItemDto[]>([])
+const tableId = ref<number | null>(null), selectedAreaId = ref(diningAreas.value[0]?.id || ''), orderError = ref(''), submitting = ref(false)
+const currentUser = getCurrentUser(), router = useRouter(), busyTables = ref<Set<number>>(new Set())
+watch(diningAreas, areas => { if (!areas.some(area => area.id === selectedAreaId.value)) selectedAreaId.value = areas[0]?.id || '' })
+const selectedArea = computed(() => diningAreas.value.find(area => area.id === selectedAreaId.value))
+const areaTables = computed(() => diningTables.value.filter(table => table.areaId === selectedAreaId.value))
+const selectedTable = computed(() => diningTables.value.find(table => table.id === tableId.value))
+const products = computed(() => apiProducts.value)
+const menuFilter = ref('all')
+const menuCategories = computed(() => [...new Set(products.value.map(product => product.categoryName).filter(Boolean))])
+const menuFilters = computed(() => [
+  { value: 'all', label: tr('All categories', 'Të gjitha kategoritë'), icon: LayoutGrid },
+  ...menuCategories.value.map(category => ({
+    value: category,
+    label: category === 'Drinks' ? tr('Drinks', 'Pije')
+      : category === 'Bakery Specials' ? tr('Bakery Specials', 'Specialitete furre')
+      : category === 'Breakfast & Appetizers' ? tr('Breakfast & Appetizers', 'Mëngjes dhe antipasta')
+      : category === 'Desserts' ? tr('Desserts', 'Ëmbëlsira')
+      : category,
+    icon: categoryIcon(category)
+  }))
+])
+const visibleProducts = computed(() => menuFilter.value === 'all'
+  ? products.value
+  : products.value.filter(product => product.categoryName === menuFilter.value))
+function categoryIcon(category: string) {
+  const name = category.toLowerCase()
+  if (name.includes('drink') || name.includes('beverage')) return Coffee
+  if (name.includes('bakery')) return Croissant
+  if (name.includes('appetizer') || name.includes('breakfast')) return Soup
+  if (name.includes('dessert')) return CakeSlice
+  return UtensilsCrossed
 }
-
-onMounted(async () => {
-  try {
-    const [prodRes, orderRes] = await Promise.all([
-      api.get<ProductDto[]>('/Products'),
-      api.get<OrderDto[]>('/Orders')
-    ])
-    apiProducts.value = prodRes.data
-    orders.value = orderRes.data
-    console.log('Loaded API products:', apiProducts.value.length)
-    console.log('Total products (API + signature):', products.value.length)
-    console.log('Loaded orders:', orders.value.length)
-  } catch (error) {
-    console.error('Error loading data:', error)
-  }
-})
-
-function addItem(p: ProductDto) {
-  const qty = quantities[p.id] || 1
-  const existing = orderItems.value.find(i => i.productId === p.id)
-  if (existing) existing.quantity += qty
-  else orderItems.value.push({ productId: p.id, quantity: qty })
-  quantities[p.id] = 1
-}
-
-function getProductName(id: number) {
-  return products.value.find(p => p.id === id)?.name || `#${id}`
-}
-
-async function submitOrder() {
-  if (!tableId.value || orderItems.value.length === 0) return
-  
-  const payload = { tableNumber: tableId.value, items: orderItems.value.map(i => ({ productId: i.productId, quantity: i.quantity })) }
-  await api.post('/Orders', payload)
-  orderItems.value = []
-  tableId.value = null
-  const { data } = await api.get<OrderDto[]>('/Orders')
-  orders.value = data
-  busyTables.value.add(payload.tableNumber)
-}
-
-function statusClass(status: string) {
-  return status === 'Pending' ? 'text-yellow-300' : status === 'Done' ? 'text-emerald-300' : 'text-red-300'
-}
-
-function isBusy(n: number) {
-  return busyTables.value.has(n) || orders.value.some(o => o.tableNumber === n && (o.status === 'Pending' || o.status === 'Preparing'))
-}
-
-function canEditTable(n: number) {
-  // Can only edit if no other waiter has an active order on this table
-  const activeOrder = orders.value.find(o => o.tableNumber === n && (o.status === 'Pending' || o.status === 'Preparing'))
-  return !activeOrder || activeOrder.waiterEmail === waiterEmail
-}
-
-function logout() {
-  signOut()
-  router.replace({ name: 'Intro' })
-}
+const orderTotal = computed(() => orderItems.value.reduce((sum, item) => sum + getProductPrice(item.productId) * item.quantity, 0))
+function tableName(id: number) { return diningTables.value.find(table => table.id === id)?.name || `${tr('Table', 'Tavolina')} ${id}` }
+const myOrders = computed(() => orders.value
+  .filter(order => !!currentUser?.email && order.waiterEmail?.toLowerCase() === currentUser.email.toLowerCase())
+  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+const todayOrders = computed(() => myOrders.value.filter(order => isToday(order.createdAt)))
+const todayCompletedOrders = computed(() => todayOrders.value.filter(order => order.status === 'Done'))
+const todaySales = computed(() => todayCompletedOrders.value.reduce((sum, order) => sum + orderGrandTotal(order), 0))
+function isToday(value: string) { const date = new Date(value); return !Number.isNaN(date.getTime()) && date.toDateString() === new Date().toDateString() }
+function formatOrderDate(value: string) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleString() }
+function money(value: number) { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(value) }
+function orderGrandTotal(order: OrderDto) { return order.items.reduce((sum, item) => sum + (item.productPrice || 0) * item.quantity, 0) }
+function orderStatusLabel(status: string) { return status === 'Pending' ? tr('Pending', 'Në pritje') : status === 'Preparing' ? tr('Preparing', 'Në përgatitje') : status === 'Ready' ? tr('Ready', 'Gati') : status === 'Done' ? tr('Completed', 'Përfunduar') : status === 'Canceled' ? tr('Canceled', 'Anuluar') : status }
+function orderStatusClass(status: string) { return status === 'Done' ? 'border-emerald-500/50 bg-emerald-900 text-emerald-200' : status === 'Canceled' ? 'border-rose-500/50 bg-rose-950 text-rose-200' : status === 'Ready' ? 'border-sky-500/50 bg-sky-950 text-sky-200' : status === 'Preparing' ? 'border-amber-500/50 bg-amber-950 text-amber-200' : 'border-slate-500/50 bg-slate-900 text-slate-200' }
+function photoFor(id: number) { const p = products.value.find(row => row.id === id); if (p?.imageUrl) return p.imageUrl; const category = (p?.categoryName || '').toLowerCase(); const group = category.includes('drink') ? [photos[1], photos[4]] : category.includes('dessert') ? [photos[0], 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80'] : [photos[2], photos[3]]; return group[id % group.length] }
+const photos = ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80','https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80','https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=400&q=80','https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=400&q=80','https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=400&q=80']
+function selectTable(id: number) { if (!canEditTable(id)) { orderError.value = tr('Another waiter is handling this active table.', 'Një kamarier tjetër po kujdeset për këtë tavolinë.'); window.alert(orderError.value); return } orderError.value = ''; tableId.value = id }
+function closeOrder() { tableId.value = null; orderItems.value = []; orderError.value = '' }
+let floorSyncHandle = 0, orderSyncHandle = 0
+async function loadOrders() { try { const { data } = await api.get<OrderDto[]>('/Orders'); orders.value = data } catch { /* keep the last loaded order list */ } }
+onMounted(async () => { await loadFloorPlan(); try { const { data } = await api.get<ProductDto[]>('/Products'); apiProducts.value = data } catch { orderError.value = tr('Could not load the menu.', 'Menuja nuk u ngarkua.') }; await loadOrders(); floorSyncHandle = window.setInterval(() => { void loadFloorPlan() }, 10000); orderSyncHandle = window.setInterval(() => { void loadOrders() }, 10000) })
+onUnmounted(() => { window.clearInterval(floorSyncHandle); window.clearInterval(orderSyncHandle) })
+function addItem(p: ProductDto) { const existing = orderItems.value.find(i => i.productId === p.id); if (existing) existing.quantity++; else orderItems.value.push({ productId: p.id, quantity: 1 }) }
+function getProductName(id: number) { return products.value.find(p => p.id === id)?.name || `#${id}` }
+function getProductPrice(id: number) { return products.value.find(p => p.id === id)?.price || 0 }
+function changeQuantity(id: number, change: number) { const row = orderItems.value.find(item => item.productId === id); if (!row) return; row.quantity += change; if (row.quantity <= 0) orderItems.value = orderItems.value.filter(item => item.productId !== id) }
+function isBusy(id: number) { return busyTables.value.has(id) || orders.value.some(o => o.tableNumber === id && ['Pending','Preparing','Ready'].includes(o.status)) }
+function canEditTable(id: number) { const active = orders.value.find(o => o.tableNumber === id && ['Pending','Preparing','Ready'].includes(o.status)); return !active || active.waiterEmail === currentUser?.email }
+async function submitOrder() { if (tableId.value === null || !orderItems.value.length) return; submitting.value = true; orderError.value = ''; const id = tableId.value; try { await api.post('/Orders', { tableNumber: id, items: orderItems.value.map(i => ({ productId: i.productId, quantity: i.quantity })) }); busyTables.value.add(id); closeOrder(); await loadOrders() } catch (error: any) { orderError.value = error.response?.data?.message || tr('Order could not be sent. Please try again.', 'Porosia nuk u dërgua. Provo përsëri.') } finally { submitting.value = false } }
+function logout() { signOut(); router.replace({ name: 'Intro' }) }
 </script>
-
-<style scoped>
-</style>
-
-

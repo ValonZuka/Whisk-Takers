@@ -43,9 +43,10 @@ export function getCurrentUser(): AuthTokenPayload | null {
     if (parts.length !== 3) return null
     
     const payload = JSON.parse(atob(parts[1]))
+    const roleClaim = payload.role || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role'] || 'client'
     return {
       name: payload.name || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Unknown',
-      role: payload.role || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role'] || 'client',
+      role: (Array.isArray(roleClaim) ? roleClaim[0] : roleClaim) as UserRole,
       email: payload.email || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || ''
     }
   } catch {

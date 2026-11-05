@@ -5,6 +5,8 @@ namespace WhiskTakers.Application.DTOs.Orders
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public double ProductPrice { get; set; }
+        public double UnitCostAtOrder { get; set; }
+        public int PrepMinutes { get; set; }
         public int Quantity { get; set; }
     }
 }
